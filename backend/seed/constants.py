@@ -1,0 +1,21 @@
+from datetime import datetime, timezone
+
+RNG_SEED = 42
+POP = 1000
+SIM_DAYS = 7
+SIM_START = datetime(2026, 9, 1, 0, 0, tzinfo=timezone.utc)
+GRID_METERS = 2000
+PING_INTERVAL_MIN = 30
+
+DEMOGRAPHIC_RATIOS = {"SOLITARY": 0.35, "COUPLE": 0.25, "NUCLEAR": 0.30, "HMO": 0.10}
+EMPLOYMENT_RATIOS = {"DAY": 0.45, "SWING": 0.18, "GRAVEYARD": 0.11, "UNEMPLOYED": 0.12, "RETIRED": 0.14}
+
+GHOST_RATE = 0.08
+CRIMINAL_RATE = 0.045
+STALE_ADDRESS_RATE = 0.25
+
+TOWER_IDS = [f"TOWER-{i}" for i in range(1, 7)]
+CAMERA_IDS = [f"CAM-{i:02d}" for i in range(1, 31)]
+ANPR_IDS = ["ANPR-N", "ANPR-E", "ANPR-S", "ANPR-W"]
+
+BULK_BATCH = 5000
