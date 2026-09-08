@@ -17,15 +17,22 @@ log = logging.getLogger("aegis.seed")
 def bulk_copy(conn, table: str, rows: list[dict]) -> int:
     if not rows:
         return 0
+    assert all(tuple(r.keys()) == tuple(rows[0].keys()) for r in rows), \
+        f"{table}: inconsistent row keys"
     cols = list(rows[0].keys())
     stmt = sql.SQL("COPY {tbl} ({cols}) FROM STDIN").format(
         tbl=sql.Identifier(table),
         cols=sql.SQL(", ").join(sql.Identifier(c) for c in cols),
     )
-    with conn.cursor() as cur, cur.copy(stmt) as cp:
-        for r in rows:
-            cp.write_row([r[c] for c in cols])
-    return len(rows)
+    with conn.cursor() as cur:
+        with cur.copy(stmt) as cp:
+            for r in rows:
+                cp.write_row([r[c] for c in cols])
+        # psycopg 3 refreshes the cursor's result (and rowcount) from the
+        # CommandComplete tag once the `copy()` context exits — this is the
+        # count of rows the server actually wrote.
+        written = cur.rowcount
+    return written if written is not None and written >= 0 else len(rows)
 
 
 def run(drop: bool = True) -> dict:

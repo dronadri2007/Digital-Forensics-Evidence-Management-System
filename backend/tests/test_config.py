@@ -22,15 +22,20 @@ def test_settings_missing_database_url_raises(monkeypatch, tmp_path):
         config.get_settings()
 
 
-def test_engine_uses_psycopg3_dialect(monkeypatch):
-    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@ep-x-pooler.aws.neon.tech/neondb?sslmode=require")
-    from app import config, db
-    importlib.reload(config)
-    config.get_settings.cache_clear()
-    importlib.reload(db)
-    try:
-        assert db.engine.url.drivername == "postgresql+psycopg"
-        assert db.engine.url.host == "ep-x-pooler.aws.neon.tech"   # userinfo/host/db preserved by the rewrite
-    finally:
-        monkeypatch.delenv("DATABASE_URL", raising=False)
-        config.get_settings.cache_clear()
+def test_sqlalchemy_url_rewrites_to_psycopg3_dialect():
+    from app.db import sqlalchemy_url
+
+    # bare postgresql:// is promoted to the explicit psycopg driver
+    assert sqlalchemy_url("postgresql://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    # Heroku-style postgres:// is promoted too
+    assert sqlalchemy_url("postgres://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    # an already-explicit dialect+driver URL passes through untouched
+    assert sqlalchemy_url("postgresql+psycopg://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    # a non-postgres URL is returned unchanged
+    assert sqlalchemy_url("sqlite:///local.db") == "sqlite:///local.db"
+    # only the leading scheme token is rewritten — a password containing the
+    # substring "postgresql://" must not be corrupted
+    weird = "postgresql://u:postgresql://@ep-x-pooler.aws.neon.tech/neondb?sslmode=require"
+    assert sqlalchemy_url(weird) == (
+        "postgresql+psycopg://u:postgresql://@ep-x-pooler.aws.neon.tech/neondb?sslmode=require"
+    )

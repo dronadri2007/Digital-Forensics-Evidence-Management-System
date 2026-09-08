@@ -7,9 +7,14 @@ import numpy as np
 
 from seed.constants import (
     POP, DEMOGRAPHIC_RATIOS, EMPLOYMENT_RATIOS, GHOST_RATE, STALE_ADDRESS_RATE,
+    CRIMINAL_RATE,
 )
 from seed import geometry
 
+# NB: Faker en_GB name_male()/name_female() prepend honorifics ("Dr", "Miss")
+# and append suffixes ("MD"), which then leak into social handles and e-mail
+# slugs downstream. We build names from bare first_name_*/last_name parts so a
+# full_name is always "<First> <Last>" with no title or suffix.
 _HH_SIZE = {"SOLITARY": 1, "COUPLE": 2, "NUCLEAR": 4, "HMO": 7}
 _WORKPLACES = [
     "Ashwick General Hospital", "Northgate Factory", "Riverside Logistics",
@@ -97,8 +102,9 @@ def _one_citizen(rng, faker, household, emp_kind) -> dict:
     cid = _det_uuid(rng)
     is_ghost = rng.random() < GHOST_RATE
     gender = faker.random_element(["male", "female"])
-    name = faker.name_male() if gender == "male" else faker.name_female()
-    dob = date(int(rng.integers(1945, 2006)), int(rng.integers(1, 13)), int(rng.integers(1, 28)))
+    first = faker.first_name_male() if gender == "male" else faker.first_name_female()
+    name = f"{first} {faker.last_name()}"
+    dob = date(int(rng.integers(1945, 2006)), int(rng.integers(1, 13)), int(rng.integers(1, 29)))
 
     shift, is_unemployed, workplace = "NONE", False, None
     if emp_kind in ("DAY", "SWING", "GRAVEYARD"):
@@ -116,7 +122,7 @@ def _one_citizen(rng, faker, household, emp_kind) -> dict:
 
     phone = None
     if rng.random() < 0.92:
-        phone = "+4470" + "".join(str(d) for d in rng.integers(0, 10, size=8))
+        phone = "+4470" + "".join(str(d) for d in rng.integers(0, 10, size=10))
 
     plate = _plate(rng) if rng.random() < 0.40 else None
 
@@ -142,7 +148,7 @@ def _one_citizen(rng, faker, household, emp_kind) -> dict:
 
 
 def pick_criminals(rng, citizens: list[dict]) -> list[dict]:
-    idx = rng.choice(len(citizens), size=45, replace=False)
+    idx = rng.choice(len(citizens), size=round(CRIMINAL_RATE * POP), replace=False)
     out = []
     for i in idx:
         c = citizens[int(i)]

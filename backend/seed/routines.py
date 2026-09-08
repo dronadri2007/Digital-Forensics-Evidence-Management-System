@@ -188,7 +188,8 @@ def build_cctv_sightings(rng, citizens, cameras) -> list[dict]:
                     "seen_time": SIM_START + timedelta(days=day, hours=hour, minutes=minute),
                     "citizen_id": ids[int(rng.integers(0, len(ids)))] if resolves else None,
                     "detected_height_cm": int(rng.integers(150, 196)),
-                    "clothing_tags": [_CLOTHING[int(rng.integers(0, len(_CLOTHING)))] for _ in range(ntags)],
+                    # sample without replacement so a sighting never gets {cap, cap}
+                    "clothing_tags": rng.choice(_CLOTHING, size=ntags, replace=False).tolist(),
                     "face_confidence": Decimal(str(conf)),
                 })
     return out

@@ -4,7 +4,16 @@ import pytest
 
 @pytest.fixture(scope="session")
 def has_db() -> bool:
-    return bool(os.getenv("DATABASE_URL"))
+    # Use the same source of truth as the app: pydantic-settings reads a local
+    # .env into Settings without exporting it to os.environ, so an env-var-only
+    # check would miss a `.env`-supplied DATABASE_URL.
+    if os.getenv("DATABASE_URL"):
+        return True
+    try:
+        from app.config import get_settings
+        return bool(get_settings().database_url)
+    except Exception:
+        return False
 
 
 @pytest.fixture(scope="session")

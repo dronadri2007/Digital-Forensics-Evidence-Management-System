@@ -43,3 +43,35 @@ def test_pick_criminals_returns_45_with_hashes():
     assert len(crims) == 45
     assert all(len(c["fingerprint_hash"]) == 64 for c in crims)
     assert all(set(c["dna_string"]) <= set("ACGT") for c in crims)
+
+
+_TITLE_TOKENS = {"Mr", "Mrs", "Ms", "Miss", "Dr", "Prof", "Mx", "Sir", "Dame"}
+
+
+def test_full_names_carry_no_faker_titles():
+    rng, fk = _rng_faker()
+    cz = population.build_citizens(rng, fk, population.build_households(rng, fk))
+    for c in cz:
+        head = c["full_name"].split()[0].rstrip(".")
+        assert head not in _TITLE_TOKENS, f"title leaked into name: {c['full_name']!r}"
+
+
+def test_phone_numbers_are_collision_free():
+    rng, fk = _rng_faker()
+    cz = population.build_citizens(rng, fk, population.build_households(rng, fk))
+    nums = [c["phone_number"] for c in cz if c["phone_number"] is not None]
+    assert nums and len(nums) == len(set(nums))
+
+
+def test_registered_plates_are_collision_free():
+    rng, fk = _rng_faker()
+    cz = population.build_citizens(rng, fk, population.build_households(rng, fk))
+    plates = [c["registered_plate"] for c in cz if c["registered_plate"] is not None]
+    assert plates and len(plates) == len(set(plates))
+
+
+def test_national_ids_are_collision_free():
+    rng, fk = _rng_faker()
+    cz = population.build_citizens(rng, fk, population.build_households(rng, fk))
+    ids = [c["national_id"] for c in cz if c["national_id"] is not None]
+    assert ids and len(ids) == len(set(ids))

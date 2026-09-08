@@ -1,7 +1,8 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import String, Integer, Boolean, Float, Date, ForeignKey, Text
+import sqlalchemy as sa
+from sqlalchemy import String, Integer, Boolean, Float, Date, ForeignKey, Text, Index
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, INET
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,20 +22,31 @@ class Household(Base):
 
 class Citizen(Base):
     __tablename__ = "citizens"
+    __table_args__ = (
+        Index(
+            "idx_citizens_name_trgm", "full_name",
+            postgresql_using="gin", postgresql_ops={"full_name": "gin_trgm_ops"},
+        ),
+        Index(
+            "idx_citizens_addr_trgm", "address",
+            postgresql_using="gin", postgresql_ops={"address": "gin_trgm_ops"},
+        ),
+        Index("idx_citizens_household", "household_id"),
+    )
     citizen_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     national_id: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True)
     full_name: Mapped[str] = mapped_column(String(128))
-    aliases: Mapped[list[str]] = mapped_column(ARRAY(String(64)), default=list)
+    aliases: Mapped[list[str]] = mapped_column(ARRAY(String(64)), default=list, server_default=sa.text("'{}'"))
     dob: Mapped[date] = mapped_column(Date)
     gender: Mapped[str] = mapped_column(String(16))
     address: Mapped[str] = mapped_column(String(256))
     address_updated_year: Mapped[int] = mapped_column(Integer)
-    legal_status: Mapped[str] = mapped_column(String(16), default="ACTIVE")
+    legal_status: Mapped[str] = mapped_column(String(16), default="ACTIVE", server_default="ACTIVE")
     household_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("households.household_id"))
     occupation: Mapped[str] = mapped_column(String(64))
     workplace_name: Mapped[str | None] = mapped_column(String(96), nullable=True)
     shift_pattern: Mapped[str] = mapped_column(String(16))
-    is_unemployed: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_unemployed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=sa.text("false"))
     phone_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
     registered_plate: Mapped[str | None] = mapped_column(String(16), nullable=True)
     photo_url: Mapped[str | None] = mapped_column(String(256), nullable=True)
@@ -55,7 +67,7 @@ class Phone(Base):
     imei: Mapped[str] = mapped_column(String(20))
     citizen_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("citizens.citizen_id"), nullable=True)
     subscriber_name: Mapped[str] = mapped_column(String(128))
-    is_prepaid: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_prepaid: Mapped[bool] = mapped_column(Boolean, default=False, server_default=sa.text("false"))
     case_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("cases.case_id"), nullable=True)
 
 
@@ -87,7 +99,7 @@ class SocialProfile(Base):
     username: Mapped[str] = mapped_column(String(48), primary_key=True)
     platform: Mapped[str] = mapped_column(String(16))
     display_name: Mapped[str] = mapped_column(String(96))
-    bio: Mapped[str] = mapped_column(String(280), default="")
+    bio: Mapped[str] = mapped_column(String(280), default="", server_default=sa.text("''"))
     recovery_email: Mapped[str] = mapped_column(String(128))
     citizen_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("citizens.citizen_id"), nullable=True)
-    is_private: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_private: Mapped[bool] = mapped_column(Boolean, default=False, server_default=sa.text("false"))
