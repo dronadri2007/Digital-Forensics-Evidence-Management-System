@@ -41,10 +41,15 @@ def build_phones(citizens_with_phone: list[dict]) -> list[dict]:
 
 def build_bank_accounts(rng, citizens: list[dict]) -> list[dict]:
     out = []
+    seen = set()
     for c in citizens:
         if rng.random() < 0.80:
+            account_id = "AC" + "".join(str(d) for d in rng.integers(0, 10, size=10))
+            while account_id in seen:
+                account_id = "AC" + "".join(str(d) for d in rng.integers(0, 10, size=10))
+            seen.add(account_id)
             out.append({
-                "account_id": "AC" + "".join(str(d) for d in rng.integers(0, 10, size=10)),
+                "account_id": account_id,
                 "citizen_id": c["citizen_id"],
             })
     return out
@@ -70,6 +75,7 @@ def _email_for(name: str) -> str:
 
 def build_social(rng, faker, citizens: list[dict]) -> tuple[list[dict], list[dict]]:
     profiles, posts = [], []
+    seen = set()
     for c in citizens:
         if rng.random() >= 0.30:
             continue
@@ -77,6 +83,9 @@ def build_social(rng, faker, citizens: list[dict]) -> tuple[list[dict], list[dic
         for k in range(n_profiles):
             platform = "ASHGRAM" if k == 0 else "CHIRPER"
             handle = c["full_name"].split()[0].lower() + str(int(rng.integers(10, 9999)))
+            while handle in seen:
+                handle = c["full_name"].split()[0].lower() + str(int(rng.integers(10, 9999)))
+            seen.add(handle)
             profiles.append({
                 "username": handle, "platform": platform,
                 "display_name": c["full_name"], "bio": faker.sentence(nb_words=6),

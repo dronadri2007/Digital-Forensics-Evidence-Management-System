@@ -56,3 +56,17 @@ def test_financials_have_some_cash_withdrawals():
     cash = [t for t in txs if t["is_cash_withdrawal"]]
     assert cash and all(t["atm_id"] for t in cash)
     assert all(t["amount"] > 0 for t in txs)
+
+
+def test_bank_account_ids_are_unique():
+    rng, fk, hh, cz = _world()
+    accts = routines.build_bank_accounts(rng, cz)
+    ids = [a["account_id"] for a in accts]
+    assert len(ids) == len(set(ids))
+
+
+def test_social_usernames_are_unique():
+    rng, fk, hh, cz = _world()
+    profiles, posts = routines.build_social(rng, fk, cz)
+    names = [p["username"] for p in profiles]
+    assert len(names) == len(set(names))
