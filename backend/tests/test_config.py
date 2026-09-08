@@ -20,3 +20,17 @@ def test_settings_missing_database_url_raises(monkeypatch, tmp_path):
     config.get_settings.cache_clear()
     with pytest.raises(Exception):
         config.get_settings()
+
+
+def test_engine_uses_psycopg3_dialect(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@ep-x-pooler.aws.neon.tech/neondb?sslmode=require")
+    from app import config, db
+    importlib.reload(config)
+    config.get_settings.cache_clear()
+    importlib.reload(db)
+    try:
+        assert db.engine.url.drivername == "postgresql+psycopg"
+        assert db.engine.url.host == "ep-x-pooler.aws.neon.tech"   # userinfo/host/db preserved by the rewrite
+    finally:
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        config.get_settings.cache_clear()
