@@ -7,14 +7,16 @@ from app.tools.telecom import query_telecom, _suppressed
 from app.tools._common import parse_ts
 
 
-def test_suppressed_overlap_logic():
+def test_suppressed_is_row_level():
     m = [{"phone_number": "+447000", "start": "2026-09-01T22:00:00Z", "end": "2026-09-01T23:00:00Z"}]
-    assert _suppressed("+447000", parse_ts("2026-09-01T22:30:00Z"),
-                       parse_ts("2026-09-01T22:45:00Z"), m) is True
-    assert _suppressed("+447000", parse_ts("2026-09-01T23:30:00Z"),
-                       parse_ts("2026-09-01T23:45:00Z"), m) is False
-    assert _suppressed("+447999", parse_ts("2026-09-01T22:30:00Z"),
-                       parse_ts("2026-09-01T22:45:00Z"), m) is False
+    # a ping inside the window, on the marked phone -> suppressed
+    assert _suppressed("+447000", parse_ts("2026-09-01T22:30:00Z"), m) is True
+    # edge-touching (== marker end) -> suppressed (inclusive)
+    assert _suppressed("+447000", parse_ts("2026-09-01T23:00:00Z"), m) is True
+    # a ping outside the window -> not suppressed
+    assert _suppressed("+447000", parse_ts("2026-09-01T23:30:00Z"), m) is False
+    # same time, different phone -> not suppressed
+    assert _suppressed("+447999", parse_ts("2026-09-01T22:30:00Z"), m) is False
 
 
 @pytest.mark.slow

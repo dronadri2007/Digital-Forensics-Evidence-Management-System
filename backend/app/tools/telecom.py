@@ -54,12 +54,12 @@ _SUBSCRIBER = text(
 )
 
 
-def _suppressed(phone, first_seen, last_seen, markers) -> bool:
+def _suppressed(phone, ping_time, markers) -> bool:
+    """True if this single ping falls inside a PING_SUPPRESSION marker for this phone."""
     for m in markers:
         if m.get("phone_number") != phone:
             continue
-        ms, me = parse_ts(m["start"]), parse_ts(m["end"])
-        if first_seen <= me and last_seen >= ms:
+        if parse_ts(m["start"]) <= ping_time <= parse_ts(m["end"]):
             return True
     return False
 
@@ -77,6 +77,8 @@ def query_telecom(session: Session, target: str, mode: str, start_time, end_time
         agg = defaultdict(lambda: {"count": 0, "first": None, "last": None,
                                    "min_sig": None, "max_sig": None})
         for r in session.execute(_RAW_PINGS, params).mappings():
+            if markers and _suppressed(r["phone_number"], r["ping_time"], markers):
+                continue
             a = agg[r["phone_number"]]
             a["count"] += 1
             a["first"] = r["ping_time"] if a["first"] is None else min(a["first"], r["ping_time"])
@@ -86,8 +88,6 @@ def query_telecom(session: Session, target: str, mode: str, start_time, end_time
             a["max_sig"] = s if a["max_sig"] is None else max(a["max_sig"], s)
         out = []
         for phone, a in agg.items():
-            if markers and _suppressed(phone, a["first"], a["last"], markers):
-                continue
             out.append({
                 "phone_number": phone,
                 "first_seen": a["first"].isoformat(),
