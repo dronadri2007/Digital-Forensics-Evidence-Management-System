@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production build output
+dist/
+dist-ssr/
+
+# Environment / local configs
+.env.local
+.env.*.local
+*.local
+
+# Agent configs and local MCP settings (contain personal access tokens)
+.agents/
+
+# Scratch and intermediate video files
+scratch/
+VIDEO/
+VIDEO LIGHT/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
