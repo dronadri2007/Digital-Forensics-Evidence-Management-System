@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ChevronDown, Dices } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import {
   WildcardConfig,
   MotiveArchetype,
   EvidenceScarcity,
   SceneType,
-  TemporalWindow,
+  SuspectVictimRelationship,
+  MethodComplexity,
   MOTIVE_OPTIONS,
   EVIDENCE_SCARCITY_OPTIONS,
   SCENE_TYPE_OPTIONS,
-  TEMPORAL_WINDOW_OPTIONS,
+  RELATIONSHIP_OPTIONS,
+  METHOD_COMPLEXITY_OPTIONS,
 } from '../../services/caseService';
 
 interface WildcardConfigModalProps {
@@ -28,10 +30,21 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
   const isDark = theme === 'dark';
 
   const [incidentMode, setIncidentMode] = useState<'Random' | 'Custom'>('Random');
-  const [motive, setMotive] = useState<MotiveArchetype>('Financial Dispute');
+  const [motive, setMotive] = useState<MotiveArchetype>('Corporate Cover-up');
   const [scarcity, setScarcity] = useState<EvidenceScarcity>('Tier 2 — Medium Evidence');
-  const [scene, setScene] = useState<SceneType>('Industrial / Port');
-  const [timeWindow, setTimeWindow] = useState<TemporalWindow>('Late Night (22:00 – 04:00)');
+  const [scene, setScene] = useState<SceneType>('Commercial');
+  const [relationship, setRelationship] = useState<SuspectVictimRelationship>('Colleague');
+  const [complexity, setComplexity] = useState<MethodComplexity>('Planned');
+  const [isRolling, setIsRolling] = useState<boolean>(false);
+
+  const rollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
+    };
+  }, []);
 
   // Handle escape key
   useEffect(() => {
@@ -48,6 +61,79 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
 
   const isRandom = incidentMode === 'Random';
 
+  const getRandomItem = <T,>(arr: readonly T[], current?: T): T => {
+    if (arr.length <= 1) return arr[0];
+    let picked = arr[Math.floor(Math.random() * arr.length)];
+    let attempts = 0;
+    while (picked === current && attempts < 10) {
+      picked = arr[Math.floor(Math.random() * arr.length)];
+      attempts++;
+    }
+    return picked;
+  };
+
+  const handleDiceRoll = () => {
+    if (isRolling) return;
+    setIsRolling(true);
+
+    // Pick final target values guaranteeing variance from current
+    const finalMotive = getRandomItem(MOTIVE_OPTIONS, motive);
+    const finalScarcity = getRandomItem(EVIDENCE_SCARCITY_OPTIONS, scarcity);
+    const finalScene = getRandomItem(SCENE_TYPE_OPTIONS, scene);
+    const finalRelationship = getRandomItem(RELATIONSHIP_OPTIONS, relationship);
+    const finalComplexity = getRandomItem(METHOD_COMPLEXITY_OPTIONS, complexity);
+
+    const startTime = Date.now();
+    const duration = 420; // 420ms total cascade
+
+    if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
+
+    rollIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+
+      // Staggered settling across ~240ms to ~420ms
+      if (elapsed < 240) {
+        setMotive(MOTIVE_OPTIONS[Math.floor(Math.random() * MOTIVE_OPTIONS.length)]);
+      } else {
+        setMotive(finalMotive);
+      }
+
+      if (elapsed < 285) {
+        setScarcity(EVIDENCE_SCARCITY_OPTIONS[Math.floor(Math.random() * EVIDENCE_SCARCITY_OPTIONS.length)]);
+      } else {
+        setScarcity(finalScarcity);
+      }
+
+      if (elapsed < 330) {
+        setScene(SCENE_TYPE_OPTIONS[Math.floor(Math.random() * SCENE_TYPE_OPTIONS.length)]);
+      } else {
+        setScene(finalScene);
+      }
+
+      if (elapsed < 375) {
+        setRelationship(RELATIONSHIP_OPTIONS[Math.floor(Math.random() * RELATIONSHIP_OPTIONS.length)]);
+      } else {
+        setRelationship(finalRelationship);
+      }
+
+      if (elapsed < 420) {
+        setComplexity(METHOD_COMPLEXITY_OPTIONS[Math.floor(Math.random() * METHOD_COMPLEXITY_OPTIONS.length)]);
+      } else {
+        setComplexity(finalComplexity);
+      }
+
+      if (elapsed >= duration) {
+        if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
+        setMotive(finalMotive);
+        setScarcity(finalScarcity);
+        setScene(finalScene);
+        setRelationship(finalRelationship);
+        setComplexity(finalComplexity);
+        setIsRolling(false);
+      }
+    }, 55);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onGenerate({
@@ -55,7 +141,8 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
       motiveArchetype: motive,
       evidenceScarcity: scarcity,
       sceneType: scene,
-      temporalWindow: timeWindow,
+      relationship,
+      methodComplexity: complexity,
     });
   };
 
@@ -75,14 +162,14 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="wildcard-modal-title"
-        className={`relative w-full max-w-[540px] rounded-[14px] border p-6 sm:p-8 z-10 transition-all duration-300 ${
+        className={`relative w-full max-w-[540px] max-h-[90vh] flex flex-col rounded-[14px] border p-6 sm:p-7 z-10 transition-all duration-300 ${
           isDark
             ? 'bg-[#0E1216]/95 border-white/[0.12] text-[#EDEAE3] shadow-[0_24px_60px_rgba(0,0,0,0.65)] backdrop-blur-xl'
             : 'bg-[#FAF8F5] border-black/[0.12] text-[#1A1C1E] shadow-[0_24px_60px_rgba(0,0,0,0.12)] backdrop-blur-xl'
         }`}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="flex items-start justify-between gap-4 mb-5 shrink-0">
           <div>
             <span
               className={`font-mono text-xs font-semibold uppercase tracking-[0.22em] block mb-1.5 select-none ${
@@ -112,25 +199,25 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 sm:space-y-4.5">
-            {/* Field 1: INCIDENT MODE */}
-            <div>
-              <label
-                htmlFor="incident-mode"
-                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
-                }`}
-              >
-                INCIDENT MODE
-              </label>
-              <div className="relative">
+        {/* Form Body with Scroll if necessary */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-0.5 space-y-3.5">
+          {/* Field 1: INCIDENT MODE + Dice Button */}
+          <div>
+            <label
+              htmlFor="incident-mode"
+              className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
+                isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+              }`}
+            >
+              INCIDENT MODE
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
                 <select
                   id="incident-mode"
                   value={incidentMode}
                   onChange={(e) => setIncidentMode(e.target.value as 'Random' | 'Custom')}
-                  className={`w-full h-11 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors cursor-pointer ${
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors cursor-pointer ${
                     isDark
                       ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60'
                       : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60'
@@ -145,10 +232,29 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   }`}
                 />
               </div>
-            </div>
 
+              {/* Dice Roll Button: ~36x36px */}
+              <button
+                type="button"
+                onClick={handleDiceRoll}
+                disabled={isRolling}
+                title="Shuffle random parameters"
+                aria-label="Shuffle random parameters"
+                className={`w-9 h-9 sm:w-[38px] sm:h-[38px] rounded-lg border flex items-center justify-center transition-all duration-150 shrink-0 cursor-pointer focus:outline-none ${
+                  isDark
+                    ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3]/55 hover:text-[#EDEAE3] hover:border-white/25 active:scale-95'
+                    : 'bg-white border-black/[0.12] text-[#1A1C1E]/55 hover:text-[#1A1C1E] hover:border-black/25 active:scale-95'
+                }`}
+              >
+                <Dices className={`w-[18px] h-[18px] transition-transform duration-300 ${isRolling ? 'rotate-180 text-[#74AC95]' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Fields 2-6 Group: Muted & Disabled when INCIDENT MODE is Random */}
+          <div className={`space-y-3.5 transition-opacity duration-200 ${isRandom ? 'opacity-35 pointer-events-none' : 'opacity-100'}`}>
             {/* Field 2: MOTIVE ARCHETYPE */}
-            <div className={`transition-opacity duration-200 ${isRandom ? 'opacity-35 pointer-events-none' : 'opacity-100'}`}>
+            <div>
               <label
                 htmlFor="motive-archetype"
                 className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
@@ -163,7 +269,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   disabled={isRandom}
                   value={motive}
                   onChange={(e) => setMotive(e.target.value as MotiveArchetype)}
-                  className={`w-full h-11 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
                     isRandom
                       ? isDark
                         ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
@@ -188,7 +294,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             </div>
 
             {/* Field 3: EVIDENCE SCARCITY */}
-            <div className={`transition-opacity duration-200 ${isRandom ? 'opacity-35 pointer-events-none' : 'opacity-100'}`}>
+            <div>
               <label
                 htmlFor="evidence-scarcity"
                 className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
@@ -203,7 +309,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   disabled={isRandom}
                   value={scarcity}
                   onChange={(e) => setScarcity(e.target.value as EvidenceScarcity)}
-                  className={`w-full h-11 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
                     isRandom
                       ? isDark
                         ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
@@ -228,7 +334,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             </div>
 
             {/* Field 4: SCENE TYPE */}
-            <div className={`transition-opacity duration-200 ${isRandom ? 'opacity-35 pointer-events-none' : 'opacity-100'}`}>
+            <div>
               <label
                 htmlFor="scene-type"
                 className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
@@ -243,7 +349,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   disabled={isRandom}
                   value={scene}
                   onChange={(e) => setScene(e.target.value as SceneType)}
-                  className={`w-full h-11 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
                     isRandom
                       ? isDark
                         ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
@@ -267,23 +373,23 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
               </div>
             </div>
 
-            {/* Field 5: TEMPORAL WINDOW */}
-            <div className={`transition-opacity duration-200 ${isRandom ? 'opacity-35 pointer-events-none' : 'opacity-100'}`}>
+            {/* Field 5: SUSPECT–VICTIM RELATIONSHIP */}
+            <div>
               <label
-                htmlFor="temporal-window"
+                htmlFor="suspect-relationship"
                 className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
                   isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
                 }`}
               >
-                TEMPORAL WINDOW
+                SUSPECT–VICTIM RELATIONSHIP
               </label>
               <div className="relative">
                 <select
-                  id="temporal-window"
+                  id="suspect-relationship"
                   disabled={isRandom}
-                  value={timeWindow}
-                  onChange={(e) => setTimeWindow(e.target.value as TemporalWindow)}
-                  className={`w-full h-11 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
+                  value={relationship}
+                  onChange={(e) => setRelationship(e.target.value as SuspectVictimRelationship)}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
                     isRandom
                       ? isDark
                         ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
@@ -293,7 +399,47 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                       : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
                   }`}
                 >
-                  {TEMPORAL_WINDOW_OPTIONS.map((opt) => (
+                  {RELATIONSHIP_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
+                    isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Field 6: METHOD COMPLEXITY */}
+            <div>
+              <label
+                htmlFor="method-complexity"
+                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
+                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                }`}
+              >
+                METHOD COMPLEXITY
+              </label>
+              <div className="relative">
+                <select
+                  id="method-complexity"
+                  disabled={isRandom}
+                  value={complexity}
+                  onChange={(e) => setComplexity(e.target.value as MethodComplexity)}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
+                    isRandom
+                      ? isDark
+                        ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
+                        : 'bg-[#F2EFEB] border-black/[0.05] text-[#1A1C1E]/40 cursor-not-allowed'
+                      : isDark
+                      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
+                      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
+                  }`}
+                >
+                  {METHOD_COMPLEXITY_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
                     </option>
@@ -310,7 +456,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
 
           {/* Modal Footer */}
           <div
-            className={`pt-6 mt-6 border-t flex items-center justify-between gap-3 ${
+            className={`pt-5 mt-5 border-t flex items-center justify-between gap-3 shrink-0 ${
               isDark ? 'border-white/[0.08]' : 'border-black/[0.08]'
             }`}
           >
@@ -321,7 +467,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
               className={`px-6 py-2.5 rounded-full font-mono text-xs uppercase tracking-wider font-semibold border transition-all duration-150 cursor-pointer focus:outline-none ${
                 isDark
                   ? 'border-white/[0.14] text-[#EDEAE3]/75 hover:text-[#EDEAE3] hover:border-white/30 bg-transparent'
-                  : 'border-black/[0.14] text-[#1A1C1E]/75 hover:text-[#1A1C1E] hover:border-black/30 bg-transparent'
+                : 'border-black/[0.14] text-[#1A1C1E]/75 hover:text-[#1A1C1E] hover:border-black/30 bg-transparent'
               }`}
             >
               CANCEL

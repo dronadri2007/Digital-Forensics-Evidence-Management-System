@@ -105,18 +105,27 @@ export type SceneType =
   | 'Public Space'
   | 'Transit / Infrastructure';
 
-export type TemporalWindow =
-  | 'Late Night (22:00 – 04:00)'
-  | 'Early Morning (04:00 – 08:00)'
-  | 'Daytime (08:00 – 17:00)'
-  | 'Evening (17:00 – 22:00)';
+export type SuspectVictimRelationship =
+  | 'Stranger'
+  | 'Acquaintance'
+  | 'Colleague'
+  | 'Family'
+  | 'Intimate / Domestic'
+  | 'Unknown';
+
+export type MethodComplexity =
+  | 'Opportunistic'
+  | 'Planned'
+  | 'Elaborate'
+  | 'Staged';
 
 export interface WildcardConfig {
   incidentMode: 'Random' | 'Custom';
   motiveArchetype: MotiveArchetype;
   evidenceScarcity: EvidenceScarcity;
   sceneType: SceneType;
-  temporalWindow: TemporalWindow;
+  relationship: SuspectVictimRelationship;
+  methodComplexity: MethodComplexity;
 }
 
 export const MOTIVE_OPTIONS: MotiveArchetype[] = [
@@ -143,11 +152,20 @@ export const SCENE_TYPE_OPTIONS: SceneType[] = [
   'Transit / Infrastructure',
 ];
 
-export const TEMPORAL_WINDOW_OPTIONS: TemporalWindow[] = [
-  'Late Night (22:00 – 04:00)',
-  'Early Morning (04:00 – 08:00)',
-  'Daytime (08:00 – 17:00)',
-  'Evening (17:00 – 22:00)',
+export const RELATIONSHIP_OPTIONS: SuspectVictimRelationship[] = [
+  'Stranger',
+  'Acquaintance',
+  'Colleague',
+  'Family',
+  'Intimate / Domestic',
+  'Unknown',
+];
+
+export const METHOD_COMPLEXITY_OPTIONS: MethodComplexity[] = [
+  'Opportunistic',
+  'Planned',
+  'Elaborate',
+  'Staged',
 ];
 
 /**
@@ -176,24 +194,26 @@ export const generateMockCase = (
   const newId = `CASE-${String(nextIdNum).padStart(3, '0')}`;
 
   if (scenarioId === 'wildcard') {
-    const isCustom = wildcardConfig?.incidentMode === 'Custom';
-
     // Determine effective parameters
-    const motive = isCustom
-      ? wildcardConfig.motiveArchetype
-      : MOTIVE_OPTIONS[Math.floor(Math.random() * MOTIVE_OPTIONS.length)];
+    const motive =
+      wildcardConfig?.motiveArchetype ||
+      MOTIVE_OPTIONS[Math.floor(Math.random() * MOTIVE_OPTIONS.length)];
 
-    const scarcity = isCustom
-      ? wildcardConfig.evidenceScarcity
-      : EVIDENCE_SCARCITY_OPTIONS[Math.floor(Math.random() * EVIDENCE_SCARCITY_OPTIONS.length)];
+    const scarcity =
+      wildcardConfig?.evidenceScarcity ||
+      EVIDENCE_SCARCITY_OPTIONS[Math.floor(Math.random() * EVIDENCE_SCARCITY_OPTIONS.length)];
 
-    const scene = isCustom
-      ? wildcardConfig.sceneType
-      : SCENE_TYPE_OPTIONS[Math.floor(Math.random() * SCENE_TYPE_OPTIONS.length)];
+    const scene =
+      wildcardConfig?.sceneType ||
+      SCENE_TYPE_OPTIONS[Math.floor(Math.random() * SCENE_TYPE_OPTIONS.length)];
 
-    const timeWindow = isCustom
-      ? wildcardConfig.temporalWindow
-      : TEMPORAL_WINDOW_OPTIONS[Math.floor(Math.random() * TEMPORAL_WINDOW_OPTIONS.length)];
+    const relationship =
+      wildcardConfig?.relationship ||
+      RELATIONSHIP_OPTIONS[Math.floor(Math.random() * RELATIONSHIP_OPTIONS.length)];
+
+    const complexity =
+      wildcardConfig?.methodComplexity ||
+      METHOD_COMPLEXITY_OPTIONS[Math.floor(Math.random() * METHOD_COMPLEXITY_OPTIONS.length)];
 
     // Evidence count and confidence by scarcity level
     const scarcityDetails: Record<EvidenceScarcity, { count: number; confidence: number }> = {
@@ -215,7 +235,7 @@ export const generateMockCase = (
     const locations = sceneLocations[scene] || ['Sector 7 Synthetic Perimeter'];
     const chosenLocation = locations[Math.floor(Math.random() * locations.length)];
 
-    // Clean title and description derived from Motive + Scene + Temporal Window
+    // Clean title and description derived from Motive + Scene + Relationship + Method Complexity
     const motiveTitles: Record<MotiveArchetype, { suffix: string; verb: string }> = {
       'Financial Dispute': { suffix: 'Asset Embezzlement', verb: 'ledger discrepancies and illicit asset diversion' },
       'Domestic / Jealousy': { suffix: 'Unlawful Entry Dispute', verb: 'unauthorized biometric collisions and access overrides' },
@@ -227,7 +247,7 @@ export const generateMockCase = (
 
     const motiveInfo = motiveTitles[motive] || { suffix: 'Incident Investigation', verb: 'anomalous sensor activity' };
     const title = `${chosenLocation} ${motiveInfo.suffix}`;
-    const description = `Investigation into ${motiveInfo.verb} recorded during ${timeWindow.toLowerCase()} at ${chosenLocation}.`;
+    const description = `${complexity} investigation into ${motiveInfo.verb}, involving ${relationship.toLowerCase()} dynamics at ${chosenLocation}.`;
 
     return {
       id: newId,
@@ -238,7 +258,8 @@ export const generateMockCase = (
         motive,
         scene,
         scarcity,
-        window: timeWindow,
+        relationship,
+        complexity,
         evidenceCount: count,
         confidence,
       },

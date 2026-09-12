@@ -11,7 +11,9 @@ export interface CaseItem {
     motive: string;
     scene: string;
     scarcity: string;
-    window: string;
+    relationship?: string;
+    complexity?: string;
+    window?: string;
     evidenceCount?: number;
     confidence?: number;
   };
