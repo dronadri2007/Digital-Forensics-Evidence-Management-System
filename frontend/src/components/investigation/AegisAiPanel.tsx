@@ -470,7 +470,7 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
           >
             <form
               onSubmit={handleSendPrompt}
-              className={`relative w-full rounded-lg border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] ${
+              className={`relative w-full rounded-[20px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] ${
                 isDark
                   ? 'bg-black/30 border-white/[0.08]'
                   : 'bg-white border-black/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]'
