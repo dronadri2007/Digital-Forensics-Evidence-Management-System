@@ -359,8 +359,14 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
         /* NORMAL INVESTIGATION MODE */
         <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
           
-          {/* Scrollable Intelligence Feed */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
+          {/* Scrollable Intelligence Feed with soft dissolving alpha mask */}
+          <div
+            className="flex-1 overflow-y-auto p-6 space-y-5 text-xs"
+            style={{
+              maskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - 48px), transparent 100%)',
+            }}
+          >
             
             {/* CURRENT OBJECTIVE */}
             <div>
@@ -463,23 +469,13 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
 
           {/* Bottom Input Area: Floating card zone with soft fade transition above */}
           <div className="px-4 pb-4 pt-1 shrink-0 relative">
-            {/* Fade gradient: 52px tall, softly dissolving the feed content into composer card zone */}
-            <div
-              className="pointer-events-none absolute left-0 right-0 h-[52px] -top-[52px] z-10"
-              style={{
-                background: isDark
-                  ? 'linear-gradient(to top, rgba(16, 21, 26, 0.95) 0%, rgba(16, 21, 26, 0.5) 45%, transparent 100%)'
-                  : 'linear-gradient(to top, rgba(246, 242, 248, 0.95) 0%, rgba(246, 242, 248, 0.5) 45%, transparent 100%)',
-              }}
-              aria-hidden="true"
-            />
-
+            {/* Fade gradient: Clean alpha mask dissolves the feed content without artificial dark overlays */}
             <form
               onSubmit={handleSendPrompt}
-              className={`relative w-full rounded-[10px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] backdrop-blur-md ${
+              className={`relative w-full rounded-[20px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] backdrop-blur-md ${
                 isDark
-                  ? 'bg-white/[0.055] border-white/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.35)]'
-                  : 'bg-[#FCFAF7]/95 border-black/[0.04] shadow-[0_8px_24px_rgba(60,40,80,0.06)]'
+                  ? 'bg-white/[0.07] border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.3)]'
+                  : 'bg-white/90 border-black/[0.06] shadow-[0_4px_20px_rgba(60,40,80,0.06)]'
               }`}
             >
               {/* Growing Multi-line Textarea */}
@@ -512,7 +508,7 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
                     ref={addBtnRef}
                     type="button"
                     onClick={() => setIsPickerOpen((prev) => !prev)}
-                    className="h-[26px] px-3 rounded-full flex items-center gap-1.5 shrink-0 bg-[#B6C7D6] text-[#1A1C1E] hover:brightness-105 active:scale-[0.98] transition-all duration-150 select-none cursor-pointer shadow-sm"
+                    className="h-[26px] px-2.5 rounded-[8px] flex items-center gap-1.5 shrink-0 bg-[#B6C7D6] text-[#1A1C1E] hover:brightness-105 active:scale-[0.98] transition-all duration-150 select-none cursor-pointer shadow-sm"
                   >
                     <Plus className="w-3 h-3 stroke-[2.5]" />
                     <span className="font-mono text-[9px] uppercase tracking-wider font-semibold">
