@@ -461,16 +461,22 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
 
           </div>
 
-          {/* Bottom Input Area */}
-          <div
-            className="p-3 sm:p-3.5 shrink-0 relative"
-            style={{
-              borderTop: isDark ? '1px solid rgba(199, 216, 184, 0.12)' : '1px solid rgba(201, 184, 216, 0.22)',
-            }}
-          >
+          {/* Bottom Input Area with soft fade transition (no hard divider) */}
+          <div className="px-3 sm:px-3.5 pb-3 sm:pb-3.5 pt-1 shrink-0 relative">
+            {/* Fade gradient (Option B: 48px tall, softly blending the feed content into composer zone) */}
+            <div
+              className="pointer-events-none absolute left-0 right-0 h-12 -top-12 z-10"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(to top, rgba(14, 18, 22, 0.95), transparent)'
+                  : 'linear-gradient(to top, rgba(250, 248, 243, 0.95), transparent)',
+              }}
+              aria-hidden="true"
+            />
+
             <form
               onSubmit={handleSendPrompt}
-              className={`relative w-full rounded-[20px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] ${
+              className={`relative w-full rounded-[14px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] ${
                 isDark
                   ? 'bg-black/30 border-white/[0.08]'
                   : 'bg-white border-black/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]'
