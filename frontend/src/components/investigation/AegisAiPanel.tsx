@@ -477,7 +477,7 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
               }`}
             >
               {/* Growing Multi-line Textarea */}
-              <div className="w-full px-2.5 pt-2 pb-0.5">
+              <div className="w-full px-3 sm:px-3.5 pt-3 pb-1">
                 <textarea
                   ref={textareaRef}
                   rows={1}
@@ -498,26 +498,19 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
                 />
               </div>
 
-              {/* Bottom Controls Row: Anchored at the bottom */}
-              <div className="flex items-center justify-between px-2 pb-1.5 pt-0.5 relative">
+              {/* Bottom Controls Row: Anchored at the bottom with breathing room */}
+              <div className="flex items-center justify-between px-3 sm:px-3.5 pb-3 pt-2.5 relative">
                 {/* "+ ADD EVIDENCE" Button & Popover Anchor */}
                 <div className="relative">
                   <button
                     ref={addBtnRef}
                     type="button"
                     onClick={() => setIsPickerOpen((prev) => !prev)}
-                    className={`h-[24px] px-2 rounded-[6px] border flex items-center justify-center shrink-0 transition-colors select-none cursor-pointer ${
-                      isPickerOpen
-                        ? isDark
-                          ? 'border-[#74AC95]/50 bg-white/[0.08] text-[#74AC95]'
-                          : 'border-[#1E6147]/50 bg-black/[0.06] text-[#1E6147]'
-                        : isDark
-                        ? 'border-white/[0.10] text-[#EDEAE3]/55 hover:bg-white/[0.06] hover:text-[#EDEAE3]/85'
-                        : 'border-black/[0.10] text-[#1A1C1E]/55 hover:bg-black/[0.04] hover:text-[#1A1C1E]/85'
-                    }`}
+                    className="h-[26px] px-3 rounded-full flex items-center gap-1.5 shrink-0 bg-[#B6C7D6] text-[#1A1C1E] hover:brightness-105 active:scale-[0.98] transition-all duration-150 select-none cursor-pointer shadow-sm"
                   >
-                    <span className="font-mono text-[9px] uppercase tracking-wider">
-                      + ADD EVIDENCE
+                    <Plus className="w-3 h-3 stroke-[2.5]" />
+                    <span className="font-mono text-[9px] uppercase tracking-wider font-semibold">
+                      ADD EVIDENCE
                     </span>
                   </button>
 
