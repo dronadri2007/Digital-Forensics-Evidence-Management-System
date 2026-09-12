@@ -37,6 +37,20 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
   const [complexity, setComplexity] = useState<MethodComplexity>('Planned');
   const [isRolling, setIsRolling] = useState<boolean>(false);
 
+  const [rollingFields, setRollingFields] = useState<{
+    motive: boolean;
+    scarcity: boolean;
+    scene: boolean;
+    relationship: boolean;
+    complexity: boolean;
+  }>({
+    motive: false,
+    scarcity: false,
+    scene: false,
+    relationship: false,
+    complexity: false,
+  });
+
   const rollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Clean up timers on unmount
@@ -75,6 +89,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
   const handleDiceRoll = () => {
     if (isRolling) return;
     setIsRolling(true);
+    setRollingFields({
+      motive: true,
+      scarcity: true,
+      scene: true,
+      relationship: true,
+      complexity: true,
+    });
 
     // Pick final target values guaranteeing variance from current
     const finalMotive = getRandomItem(MOTIVE_OPTIONS, motive);
@@ -84,42 +105,51 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
     const finalComplexity = getRandomItem(METHOD_COMPLEXITY_OPTIONS, complexity);
 
     const startTime = Date.now();
-    const duration = 420; // 420ms total cascade
+    const duration = 720; // 720ms total cascade for readable roll
 
     if (rollIntervalRef.current) clearInterval(rollIntervalRef.current);
 
     rollIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
 
-      // Staggered settling across ~240ms to ~420ms
-      if (elapsed < 240) {
+      // Field 2: Motive settles at ~320ms
+      if (elapsed < 320) {
         setMotive(MOTIVE_OPTIONS[Math.floor(Math.random() * MOTIVE_OPTIONS.length)]);
       } else {
         setMotive(finalMotive);
+        setRollingFields((prev) => (prev.motive ? { ...prev, motive: false } : prev));
       }
 
-      if (elapsed < 285) {
+      // Field 3: Scarcity settles at ~420ms
+      if (elapsed < 420) {
         setScarcity(EVIDENCE_SCARCITY_OPTIONS[Math.floor(Math.random() * EVIDENCE_SCARCITY_OPTIONS.length)]);
       } else {
         setScarcity(finalScarcity);
+        setRollingFields((prev) => (prev.scarcity ? { ...prev, scarcity: false } : prev));
       }
 
-      if (elapsed < 330) {
+      // Field 4: Scene settles at ~520ms
+      if (elapsed < 520) {
         setScene(SCENE_TYPE_OPTIONS[Math.floor(Math.random() * SCENE_TYPE_OPTIONS.length)]);
       } else {
         setScene(finalScene);
+        setRollingFields((prev) => (prev.scene ? { ...prev, scene: false } : prev));
       }
 
-      if (elapsed < 375) {
+      // Field 5: Relationship settles at ~620ms
+      if (elapsed < 620) {
         setRelationship(RELATIONSHIP_OPTIONS[Math.floor(Math.random() * RELATIONSHIP_OPTIONS.length)]);
       } else {
         setRelationship(finalRelationship);
+        setRollingFields((prev) => (prev.relationship ? { ...prev, relationship: false } : prev));
       }
 
-      if (elapsed < 420) {
+      // Field 6: Complexity settles at ~720ms
+      if (elapsed < 720) {
         setComplexity(METHOD_COMPLEXITY_OPTIONS[Math.floor(Math.random() * METHOD_COMPLEXITY_OPTIONS.length)]);
       } else {
         setComplexity(finalComplexity);
+        setRollingFields((prev) => (prev.complexity ? { ...prev, complexity: false } : prev));
       }
 
       if (elapsed >= duration) {
@@ -129,9 +159,16 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
         setScene(finalScene);
         setRelationship(finalRelationship);
         setComplexity(finalComplexity);
+        setRollingFields({
+          motive: false,
+          scarcity: false,
+          scene: false,
+          relationship: false,
+          complexity: false,
+        });
         setIsRolling(false);
       }
-    }, 55);
+    }, 65);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -144,6 +181,41 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
       relationship,
       methodComplexity: complexity,
     });
+  };
+
+  // Helper for field styling
+  const getFieldClass = (isFieldRolling: boolean) => {
+    if (isRandom) {
+      if (isFieldRolling) {
+        return isDark
+          ? 'bg-[#12161F] border-[#74AC95]/50 shadow-sm cursor-default'
+          : 'bg-white border-[#1E6147]/50 shadow-sm cursor-default';
+      }
+      return isDark
+        ? 'bg-[#12161F]/90 border-white/[0.08] cursor-default'
+        : 'bg-[#FAF8F5] border-black/[0.10] cursor-default';
+    }
+    // Active Custom state
+    return isDark
+      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
+      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer';
+  };
+
+  // Inline style override to guarantee Chromium never washes out disabled text
+  const getFieldStyle = (isFieldRolling: boolean): React.CSSProperties | undefined => {
+    if (!isRandom) return undefined;
+    if (isFieldRolling) {
+      return {
+        opacity: 1,
+        color: isDark ? 'rgba(237, 234, 227, 0.95)' : 'rgba(26, 28, 30, 0.95)',
+        WebkitTextFillColor: isDark ? 'rgba(237, 234, 227, 0.95)' : 'rgba(26, 28, 30, 0.95)',
+      };
+    }
+    return {
+      opacity: 1,
+      color: isDark ? 'rgba(237, 234, 227, 0.65)' : 'rgba(26, 28, 30, 0.65)',
+      WebkitTextFillColor: isDark ? 'rgba(237, 234, 227, 0.65)' : 'rgba(26, 28, 30, 0.65)',
+    };
   };
 
   return (
@@ -199,14 +271,14 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
           </button>
         </div>
 
-        {/* Form Body with Scroll if necessary */}
+        {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-0.5 space-y-3.5">
           {/* Field 1: INCIDENT MODE + Dice Button */}
           <div>
             <label
               htmlFor="incident-mode"
               className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                isDark ? 'text-[#EDEAE3]/70' : 'text-[#1A1C1E]/75'
               }`}
             >
               INCIDENT MODE
@@ -241,24 +313,28 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 title="Shuffle random parameters"
                 aria-label="Shuffle random parameters"
                 className={`w-9 h-9 sm:w-[38px] sm:h-[38px] rounded-lg border flex items-center justify-center transition-all duration-150 shrink-0 cursor-pointer focus:outline-none ${
-                  isDark
+                  isRolling
+                    ? isDark
+                      ? 'bg-[#12161F] border-[#74AC95]/50 text-[#74AC95]'
+                      : 'bg-white border-[#1E6147]/50 text-[#1E6147]'
+                    : isDark
                     ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3]/55 hover:text-[#EDEAE3] hover:border-white/25 active:scale-95'
                     : 'bg-white border-black/[0.12] text-[#1A1C1E]/55 hover:text-[#1A1C1E] hover:border-black/25 active:scale-95'
                 }`}
               >
-                <Dices className={`w-[18px] h-[18px] transition-transform duration-300 ${isRolling ? 'rotate-180 text-[#74AC95]' : ''}`} />
+                <Dices className={`w-[18px] h-[18px] transition-transform duration-500 ${isRolling ? 'rotate-180' : ''}`} />
               </button>
             </div>
           </div>
 
-          {/* Fields 2-6 Group: Muted & Disabled when INCIDENT MODE is Random */}
-          <div className={`space-y-3.5 transition-opacity duration-200 ${isRandom ? 'opacity-35 pointer-events-none' : 'opacity-100'}`}>
+          {/* Fields 2-6 Group: Legible Muted State in Random Mode */}
+          <div className="space-y-3.5">
             {/* Field 2: MOTIVE ARCHETYPE */}
             <div>
               <label
                 htmlFor="motive-archetype"
-                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 transition-colors duration-200 ${
+                  isDark ? 'text-[#EDEAE3]/70' : 'text-[#1A1C1E]/75'
                 }`}
               >
                 MOTIVE ARCHETYPE
@@ -267,17 +343,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 <select
                   id="motive-archetype"
                   disabled={isRandom}
+                  tabIndex={isRandom ? -1 : 0}
                   value={motive}
+                  style={getFieldStyle(rollingFields.motive)}
                   onChange={(e) => setMotive(e.target.value as MotiveArchetype)}
-                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
-                    isRandom
-                      ? isDark
-                        ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
-                        : 'bg-[#F2EFEB] border-black/[0.05] text-[#1A1C1E]/40 cursor-not-allowed'
-                      : isDark
-                      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
-                      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
-                  }`}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-all duration-200 ${getFieldClass(
+                    rollingFields.motive
+                  )}`}
                 >
                   {MOTIVE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -285,11 +357,22 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
-                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                    isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                  }`}
-                />
+
+                {isRandom ? (
+                  <Dices
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
+                      rollingFields.motive
+                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
+                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                ) : (
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
+                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                )}
               </div>
             </div>
 
@@ -297,8 +380,8 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             <div>
               <label
                 htmlFor="evidence-scarcity"
-                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 transition-colors duration-200 ${
+                  isDark ? 'text-[#EDEAE3]/70' : 'text-[#1A1C1E]/75'
                 }`}
               >
                 EVIDENCE SCARCITY
@@ -307,17 +390,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 <select
                   id="evidence-scarcity"
                   disabled={isRandom}
+                  tabIndex={isRandom ? -1 : 0}
                   value={scarcity}
+                  style={getFieldStyle(rollingFields.scarcity)}
                   onChange={(e) => setScarcity(e.target.value as EvidenceScarcity)}
-                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
-                    isRandom
-                      ? isDark
-                        ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
-                        : 'bg-[#F2EFEB] border-black/[0.05] text-[#1A1C1E]/40 cursor-not-allowed'
-                      : isDark
-                      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
-                      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
-                  }`}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-all duration-200 ${getFieldClass(
+                    rollingFields.scarcity
+                  )}`}
                 >
                   {EVIDENCE_SCARCITY_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -325,11 +404,22 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
-                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                    isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                  }`}
-                />
+
+                {isRandom ? (
+                  <Dices
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
+                      rollingFields.scarcity
+                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
+                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                ) : (
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
+                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                )}
               </div>
             </div>
 
@@ -337,8 +427,8 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             <div>
               <label
                 htmlFor="scene-type"
-                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 transition-colors duration-200 ${
+                  isDark ? 'text-[#EDEAE3]/70' : 'text-[#1A1C1E]/75'
                 }`}
               >
                 SCENE TYPE
@@ -347,17 +437,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 <select
                   id="scene-type"
                   disabled={isRandom}
+                  tabIndex={isRandom ? -1 : 0}
                   value={scene}
+                  style={getFieldStyle(rollingFields.scene)}
                   onChange={(e) => setScene(e.target.value as SceneType)}
-                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
-                    isRandom
-                      ? isDark
-                        ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
-                        : 'bg-[#F2EFEB] border-black/[0.05] text-[#1A1C1E]/40 cursor-not-allowed'
-                      : isDark
-                      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
-                      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
-                  }`}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-all duration-200 ${getFieldClass(
+                    rollingFields.scene
+                  )}`}
                 >
                   {SCENE_TYPE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -365,11 +451,22 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
-                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                    isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                  }`}
-                />
+
+                {isRandom ? (
+                  <Dices
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
+                      rollingFields.scene
+                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
+                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                ) : (
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
+                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                )}
               </div>
             </div>
 
@@ -377,8 +474,8 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             <div>
               <label
                 htmlFor="suspect-relationship"
-                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 transition-colors duration-200 ${
+                  isDark ? 'text-[#EDEAE3]/70' : 'text-[#1A1C1E]/75'
                 }`}
               >
                 SUSPECT–VICTIM RELATIONSHIP
@@ -387,17 +484,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 <select
                   id="suspect-relationship"
                   disabled={isRandom}
+                  tabIndex={isRandom ? -1 : 0}
                   value={relationship}
+                  style={getFieldStyle(rollingFields.relationship)}
                   onChange={(e) => setRelationship(e.target.value as SuspectVictimRelationship)}
-                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
-                    isRandom
-                      ? isDark
-                        ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
-                        : 'bg-[#F2EFEB] border-black/[0.05] text-[#1A1C1E]/40 cursor-not-allowed'
-                      : isDark
-                      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
-                      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
-                  }`}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-all duration-200 ${getFieldClass(
+                    rollingFields.relationship
+                  )}`}
                 >
                   {RELATIONSHIP_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -405,11 +498,22 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
-                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                    isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                  }`}
-                />
+
+                {isRandom ? (
+                  <Dices
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
+                      rollingFields.relationship
+                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
+                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                ) : (
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
+                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                )}
               </div>
             </div>
 
@@ -417,8 +521,8 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             <div>
               <label
                 htmlFor="method-complexity"
-                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 ${
-                  isDark ? 'text-[#EDEAE3]/65' : 'text-[#1A1C1E]/70'
+                className={`font-mono text-[11px] font-medium uppercase tracking-[0.16em] block mb-1.5 transition-colors duration-200 ${
+                  isDark ? 'text-[#EDEAE3]/70' : 'text-[#1A1C1E]/75'
                 }`}
               >
                 METHOD COMPLEXITY
@@ -427,17 +531,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 <select
                   id="method-complexity"
                   disabled={isRandom}
+                  tabIndex={isRandom ? -1 : 0}
                   value={complexity}
+                  style={getFieldStyle(rollingFields.complexity)}
                   onChange={(e) => setComplexity(e.target.value as MethodComplexity)}
-                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-colors ${
-                    isRandom
-                      ? isDark
-                        ? 'bg-[#12161F]/40 border-white/[0.05] text-[#EDEAE3]/40 cursor-not-allowed'
-                        : 'bg-[#F2EFEB] border-black/[0.05] text-[#1A1C1E]/40 cursor-not-allowed'
-                      : isDark
-                      ? 'bg-[#12161F] border-white/[0.10] text-[#EDEAE3] focus:border-[#74AC95]/60 cursor-pointer'
-                      : 'bg-white border-black/[0.12] text-[#1A1C1E] focus:border-[#1E6147]/60 cursor-pointer'
-                  }`}
+                  className={`w-full h-10 sm:h-10.5 px-3.5 pr-10 rounded-lg border font-sans text-xs sm:text-sm appearance-none outline-none transition-all duration-200 ${getFieldClass(
+                    rollingFields.complexity
+                  )}`}
                 >
                   {METHOD_COMPLEXITY_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -445,11 +545,22 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown
-                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                    isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                  }`}
-                />
+
+                {isRandom ? (
+                  <Dices
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
+                      rollingFields.complexity
+                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
+                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                ) : (
+                  <ChevronDown
+                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
+                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                    }`}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -467,7 +578,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
               className={`px-6 py-2.5 rounded-full font-mono text-xs uppercase tracking-wider font-semibold border transition-all duration-150 cursor-pointer focus:outline-none ${
                 isDark
                   ? 'border-white/[0.14] text-[#EDEAE3]/75 hover:text-[#EDEAE3] hover:border-white/30 bg-transparent'
-                : 'border-black/[0.14] text-[#1A1C1E]/75 hover:text-[#1A1C1E] hover:border-black/30 bg-transparent'
+                  : 'border-black/[0.14] text-[#1A1C1E]/75 hover:text-[#1A1C1E] hover:border-black/30 bg-transparent'
               }`}
             >
               CANCEL
