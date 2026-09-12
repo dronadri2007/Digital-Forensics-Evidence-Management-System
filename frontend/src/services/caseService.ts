@@ -1,4 +1,4 @@
-import { CaseItem, MOCK_CASES } from '../pages/CasesPage';
+import { CaseItem } from '../pages/CasesPage';
 
 export interface ScenarioDefinition {
   id: string;
@@ -47,50 +47,54 @@ export const WILDCARD_SCENARIO: ScenarioDefinition = {
   isWildcard: true,
 };
 
-const SESSION_STORAGE_KEY = 'aegis_case_files_v1';
+const LOCAL_STORAGE_KEY = 'aegis_case_files_v1';
 
 /**
- * Load cases from session storage if available, otherwise return initial cases.
+ * Load cases from local storage if available. Returns an empty array by default.
  */
-export const loadSessionCases = (): CaseItem[] => {
-  if (typeof window === 'undefined') return MOCK_CASES;
+export const loadStoredCases = (): CaseItem[] => {
+  if (typeof window === 'undefined') return [];
   try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
-    console.warn('Failed to load cases from sessionStorage', e);
+    console.warn('Failed to load cases from localStorage', e);
   }
-  return MOCK_CASES;
+  return [];
 };
 
 /**
- * Save cases to session storage for session persistence across route changes.
+ * Save cases to local storage for persistence across reloads, theme toggles, and navigation.
  */
-export const saveSessionCases = (cases: CaseItem[]): void => {
+export const saveStoredCases = (cases: CaseItem[]): void => {
   if (typeof window === 'undefined') return;
   try {
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(cases));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cases));
   } catch (e) {
-    console.warn('Failed to save cases to sessionStorage', e);
+    console.warn('Failed to save cases to localStorage', e);
   }
 };
+
+// Aliases for backward compatibility
+export const loadSessionCases = loadStoredCases;
+export const saveSessionCases = saveStoredCases;
 
 /**
  * Isolated mock case generation function.
  * Given a scenario ID and existing cases, generates a unique CaseItem with CASE-0NN ID.
- * Replaceable with real backend logic when available.
+ * When no cases exist, starts at CASE-001.
  */
 export const generateMockCase = (
   scenarioId: string,
   existingCases: CaseItem[]
 ): CaseItem => {
-  // Determine next case numeric ID
-  let maxIdNum = 3;
+  // Determine next case numeric ID based on existing cases
+  let maxIdNum = 0;
   for (const c of existingCases) {
     const match = c.id.match(/^CASE-(\d+)$/i);
     if (match) {

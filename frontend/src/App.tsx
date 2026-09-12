@@ -7,7 +7,7 @@ import { InvestigationRoomPage } from './pages/InvestigationRoomPage';
 import { NewInvestigationPage } from './pages/NewInvestigationPage';
 import { AboutPage } from './pages/AboutPage';
 import { InfoModal } from './components/InfoModal';
-import { loadSessionCases, saveSessionCases, generateMockCase } from './services/caseService';
+import { loadStoredCases, saveStoredCases, generateMockCase } from './services/caseService';
 
 const AppContent: React.FC = () => {
   const { theme } = useTheme();
@@ -24,7 +24,7 @@ const AppContent: React.FC = () => {
   // Track previous path for /about Back button (defaults to /cases, not landing)
   const [previousPath, setPreviousPath] = useState<string>('/cases');
 
-  const [cases, setCases] = useState<CaseItem[]>(() => loadSessionCases());
+  const [cases, setCases] = useState<CaseItem[]>(() => loadStoredCases());
 
   useEffect(() => {
     const handlePopState = () => {
@@ -46,7 +46,7 @@ const AppContent: React.FC = () => {
     const newCase = generateMockCase(scenarioId, cases);
     const updatedCases = [newCase, ...cases];
     setCases(updatedCases);
-    saveSessionCases(updatedCases);
+    saveStoredCases(updatedCases);
     navigate(`/cases/${newCase.id}`);
   };
 
@@ -90,6 +90,7 @@ const AppContent: React.FC = () => {
         ) : isInvestigation ? (
           <InvestigationRoomPage
             caseId={currentCaseId}
+            cases={cases}
             onNavigateBack={() => navigate('/cases')}
           />
         ) : isNewInvestigation ? (

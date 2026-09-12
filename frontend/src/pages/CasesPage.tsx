@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -9,62 +9,22 @@ export interface CaseItem {
   status: 'INVESTIGATION ACTIVE' | 'INVESTIGATION COMPLETE';
 }
 
-export const MOCK_CASES: CaseItem[] = [
-  {
-    id: 'CASE-001',
-    title: 'Ashwick Water Distribution Anomaly',
-    description: 'Telemetry discrepancies and automated valve overrides detected in Sector 4 municipal pumping station.',
-    status: 'INVESTIGATION ACTIVE',
-  },
-  {
-    id: 'CASE-002',
-    title: 'Substation 9 Relay Disruption',
-    description: 'Grid frequency drift and anomalous switching sequences reported by Ashwick Energy Grid authority.',
-    status: 'INVESTIGATION ACTIVE',
-  },
-  {
-    id: 'CASE-003',
-    title: 'Civic Transit Telemetry Leak',
-    description: 'Unencrypted vehicle coordinate transmissions isolated on internal municipal trunk routes.',
-    status: 'INVESTIGATION COMPLETE',
-  },
-];
-
 interface CasesPageProps {
   cases?: CaseItem[];
   onOpenCase?: (caseId: string) => void;
   onNewInvestigation?: () => void;
-  mockSeed?: boolean;
 }
 
 export const CasesPage: React.FC<CasesPageProps> = ({
   cases: propCases,
   onOpenCase,
   onNewInvestigation,
-  mockSeed = false,
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Check URL query param for dev verification: ?view=populated or ?mock=true
-  const [internalCases, setInternalCases] = useState<CaseItem[]>(() => {
-    if (mockSeed) return MOCK_CASES;
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('view') === 'populated' || params.get('mock') === 'true') {
-        return MOCK_CASES;
-      }
-    }
-    return [];
-  });
-
+  const [internalCases] = useState<CaseItem[]>([]);
   const cases = propCases ?? internalCases;
-
-  useEffect(() => {
-    if (mockSeed) {
-      setInternalCases(MOCK_CASES);
-    }
-  }, [mockSeed]);
 
   return (
     <div 
