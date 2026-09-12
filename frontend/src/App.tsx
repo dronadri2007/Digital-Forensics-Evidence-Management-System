@@ -50,6 +50,19 @@ const AppContent: React.FC = () => {
     navigate(`/cases/${newCase.id}`);
   };
 
+  const handleUpdateCaseStatus = (
+    caseId: string,
+    status: 'INVESTIGATION ACTIVE' | 'INVESTIGATION COMPLETE'
+  ) => {
+    setCases((prevCases) => {
+      const updated = prevCases.map((c) =>
+        c.id === caseId ? { ...c, status } : c
+      );
+      saveStoredCases(updated);
+      return updated;
+    });
+  };
+
   const isAbout = currentPath === '/about';
   const isCasesList = currentPath === '/cases';
   const isNewInvestigation = currentPath === '/cases/new';
@@ -92,6 +105,7 @@ const AppContent: React.FC = () => {
             caseId={currentCaseId}
             cases={cases}
             onNavigateBack={() => navigate('/cases')}
+            onUpdateCaseStatus={handleUpdateCaseStatus}
           />
         ) : isNewInvestigation ? (
           <NewInvestigationPage onStartCase={handleStartCase} />

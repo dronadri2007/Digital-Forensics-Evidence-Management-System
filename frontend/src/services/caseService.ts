@@ -84,6 +84,19 @@ export const saveStoredCases = (cases: CaseItem[]): void => {
 export const loadSessionCases = loadStoredCases;
 export const saveSessionCases = saveStoredCases;
 
+/**
+ * Update the status of a specific case in localStorage and return the updated cases list.
+ */
+export const updateCaseStatus = (
+  caseId: string,
+  status: 'INVESTIGATION ACTIVE' | 'INVESTIGATION COMPLETE'
+): CaseItem[] => {
+  const current = loadStoredCases();
+  const updated = current.map((c) => (c.id === caseId ? { ...c, status } : c));
+  saveStoredCases(updated);
+  return updated;
+};
+
 export type MotiveArchetype =
   | 'Financial Dispute'
   | 'Domestic / Jealousy'

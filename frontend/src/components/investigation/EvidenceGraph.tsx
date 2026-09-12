@@ -7,24 +7,192 @@ interface EvidenceGraphProps {
   edges: GraphEdgeData[];
   selectedNodeId: string | null;
   isSolved: boolean;
+  isCaseComplete?: boolean;
   onSelectNode: (node: GraphNodeData | null) => void;
 }
 
 const NODE_WIDTH = 144;
 const NODE_HEIGHT = 62;
+const MIN_GAP = 32;
+const REQ_WIDTH = NODE_WIDTH + MIN_GAP; // 176
+const REQ_HEIGHT = NODE_HEIGHT + MIN_GAP; // 94
+
+/**
+ * Resolves rectangle overlaps and maintains minimum margin between nodes.
+ * User-placed nodes are treated as fixed anchors (0 displacement).
+ * For new vs existing node collisions, new node takes 85% displacement and existing nudges 15%.
+ */
+function resolveCollisions(
+  nodes: GraphNodeData[],
+  userPlacedIds: Set<string> = new Set(),
+  newlyAddedIds: Set<string> = new Set()
+): GraphNodeData[] {
+  const resolved = nodes.map((n) => ({ ...n }));
+  if (resolved.length <= 1) return resolved;
+
+  const MAX_ITERATIONS = 20;
+
+  for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
+    let anyCollision = false;
+
+    // Centroid of graph to determine outward direction if nodes are perfectly stacked
+    const centroidX = resolved.reduce((sum, n) => sum + n.x, 0) / resolved.length;
+    const centroidY = resolved.reduce((sum, n) => sum + n.y, 0) / resolved.length;
+
+    for (let i = 0; i < resolved.length; i++) {
+      for (let j = i + 1; j < resolved.length; j++) {
+        const a = resolved[i];
+        const b = resolved[j];
+
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const ox = REQ_WIDTH - Math.abs(dx);
+        const oy = REQ_HEIGHT - Math.abs(dy);
+
+        if (ox > 0 && oy > 0) {
+          anyCollision = true;
+
+          const isAUser = userPlacedIds.has(a.id);
+          const isBUser = userPlacedIds.has(b.id);
+
+          // If both are manually placed by the user, both are fixed anchors
+          if (isAUser && isBUser) {
+            continue;
+          }
+
+          let ratioA = 0.5;
+          let ratioB = 0.5;
+
+          if (isAUser) {
+            ratioA = 0;
+            ratioB = 1.0;
+          } else if (isBUser) {
+            ratioA = 1.0;
+            ratioB = 0;
+          } else {
+            const isANew = newlyAddedIds.has(a.id);
+            const isBNew = newlyAddedIds.has(b.id);
+            if (isANew && !isBNew) {
+              ratioA = 0.85;
+              ratioB = 0.15;
+            } else if (isBNew && !isANew) {
+              ratioA = 0.15;
+              ratioB = 0.85;
+            }
+          }
+
+          // Choose axis of minimal normalized overlap to preserve intended placement
+          const nx = ox / REQ_WIDTH;
+          const ny = oy / REQ_HEIGHT;
+
+          if (nx < ny) {
+            // Separate along X
+            let dirX = Math.sign(dx);
+            if (dirX === 0) {
+              dirX = b.x >= centroidX ? 1 : -1;
+            }
+            a.x -= dirX * ox * ratioA;
+            b.x += dirX * ox * ratioB;
+          } else {
+            // Separate along Y
+            let dirY = Math.sign(dy);
+            if (dirY === 0) {
+              dirY = b.y >= centroidY ? 1 : -1;
+            }
+            a.y -= dirY * oy * ratioA;
+            b.y += dirY * oy * ratioB;
+          }
+        }
+      }
+    }
+
+    if (!anyCollision) break;
+  }
+
+  return resolved.map((n) => ({
+    ...n,
+    x: Math.round(n.x * 10) / 10,
+    y: Math.round(n.y * 10) / 10,
+  }));
+}
+
+// Smooth 600ms animated confidence number component
+export const AnimatedConfidence: React.FC<{ value?: number; className?: string }> = ({
+  value,
+  className,
+}) => {
+  const [displayValue, setDisplayValue] = useState<number | undefined>(value);
+  const prevValueRef = useRef<number | undefined>(value);
+
+  useEffect(() => {
+    if (value === undefined) {
+      setDisplayValue(undefined);
+      return;
+    }
+    const startVal = prevValueRef.current ?? value;
+    prevValueRef.current = value;
+
+    if (startVal === value) {
+      setDisplayValue(value);
+      return;
+    }
+
+    let startTimestamp: number | null = null;
+    const duration = 600; // 600ms per specification
+    let animationFrameId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+      const progress = Math.min(elapsed / duration, 1);
+      // Quad ease-out: progress * (2 - progress)
+      const ease = progress * (2 - progress);
+      const current = Math.round(startVal + (value - startVal) * ease);
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [value]);
+
+  if (displayValue === undefined) return null;
+  return <span className={className}>{displayValue}%</span>;
+};
 
 export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
   nodes: initialNodes,
   edges,
   selectedNodeId,
   isSolved,
+  isCaseComplete = false,
   onSelectNode,
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Node positions state for dragging
-  const [nodes, setNodes] = useState<GraphNodeData[]>(initialNodes);
+  // Tracks nodes that have been explicitly dragged by user to a custom position
+  const userPlacedNodeIdsRef = useRef<Set<string>>(new Set());
+
+  // Tracks settled positions of nodes in canvas coordinates so layout stays stable across re-renders
+  const settledPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+
+  // Active dragging state for instantaneous response
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+
+  // Initialize node state with collision-resolved coordinates
+  const [nodes, setNodes] = useState<GraphNodeData[]>(() => {
+    const resolved = resolveCollisions(
+      initialNodes,
+      new Set(),
+      new Set(initialNodes.map((n) => n.id))
+    );
+    resolved.forEach((n) => settledPositionsRef.current.set(n.id, { x: n.x, y: n.y }));
+    return resolved;
+  });
 
   // Pan and Zoom transform
   const [transform, setTransform] = useState<{ x: number; y: number; scale: number }>({
@@ -38,9 +206,55 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
   const panStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const draggingNodeRef = useRef<{ id: string; startX: number; startY: number; nodeStartX: number; nodeStartY: number } | null>(null);
 
-  // Sync initial nodes if prop updates
+  // Track animated nodes and edges so animations run only when newly revealed
+  const animatedNodeIdsRef = useRef<Set<string>>(new Set());
+  const animatedEdgeIdsRef = useRef<Set<string>>(new Set());
+  const isInitialMountRef = useRef<boolean>(true);
+
+  // If the case is already complete or loaded solved on mount, mark all current nodes/edges as already animated
   useEffect(() => {
-    setNodes(initialNodes);
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      if (isCaseComplete || isSolved) {
+        initialNodes.forEach((n) => animatedNodeIdsRef.current.add(n.id));
+        edges.forEach((e) => animatedEdgeIdsRef.current.add(e.id));
+      }
+    }
+  }, [isCaseComplete, isSolved, initialNodes, edges]);
+
+  // Sync initial nodes when prop updates (e.g. progressive discovery stage advancement)
+  useEffect(() => {
+    // Prune stale IDs from userPlaced and settled positions if case changed
+    const currentPropIds = new Set(initialNodes.map((n) => n.id));
+    for (const id of Array.from(userPlacedNodeIdsRef.current)) {
+      if (!currentPropIds.has(id)) userPlacedNodeIdsRef.current.delete(id);
+    }
+    for (const id of Array.from(settledPositionsRef.current.keys())) {
+      if (!currentPropIds.has(id)) settledPositionsRef.current.delete(id);
+    }
+
+    // Build candidates: keep settled/dragged coordinates for existing nodes, identify newly added nodes
+    const newlyAddedIds = new Set<string>();
+    const candidates = initialNodes.map((n) => {
+      const settled = settledPositionsRef.current.get(n.id);
+      if (settled) {
+        return { ...n, x: settled.x, y: settled.y };
+      }
+      newlyAddedIds.add(n.id);
+      return { ...n };
+    });
+
+    const resolved = resolveCollisions(
+      candidates,
+      userPlacedNodeIdsRef.current,
+      newlyAddedIds
+    );
+
+    resolved.forEach((n) => {
+      settledPositionsRef.current.set(n.id, { x: n.x, y: n.y });
+    });
+
+    setNodes(resolved);
   }, [initialNodes]);
 
   // Handle Canvas Wheel Zoom
@@ -69,8 +283,18 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
       const dx = (e.clientX - startX) / transform.scale;
       const dy = (e.clientY - startY) / transform.scale;
 
+      // Mark as user-placed if dragged more than 3px
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 3) {
+        userPlacedNodeIdsRef.current.add(id);
+      }
+
+      const nextX = Math.round((nodeStartX + dx) * 10) / 10;
+      const nextY = Math.round((nodeStartY + dy) * 10) / 10;
+
+      settledPositionsRef.current.set(id, { x: nextX, y: nextY });
+
       setNodes((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, x: nodeStartX + dx, y: nodeStartY + dy } : n))
+        prev.map((n) => (n.id === id ? { ...n, x: nextX, y: nextY } : n))
       );
       return;
     }
@@ -88,6 +312,7 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
   const handleMouseUp = useCallback(() => {
     isPanningRef.current = false;
     draggingNodeRef.current = null;
+    setDraggingNodeId(null);
   }, []);
 
   useEffect(() => {
@@ -109,6 +334,7 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
       nodeStartX: node.x,
       nodeStartY: node.y,
     };
+    setDraggingNodeId(node.id);
   };
 
   // Semantic styles for node cards
@@ -155,6 +381,29 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
   // Node Map for edge calculations
   const nodeMap = new Map<string, GraphNodeData>(nodes.map((n) => [n.id, n]));
 
+  // Find newly added nodes and edges for staggered entrance animations
+  let newNodeCounter = 0;
+  const newNodesStaggerMap = new Map<string, number>();
+  nodes.forEach((n) => {
+    if (!animatedNodeIdsRef.current.has(n.id)) {
+      newNodesStaggerMap.set(n.id, newNodeCounter++);
+    }
+  });
+
+  let newEdgeCounter = 0;
+  const newEdgesStaggerMap = new Map<string, number>();
+  edges.forEach((e) => {
+    if (!animatedEdgeIdsRef.current.has(e.id)) {
+      newEdgesStaggerMap.set(e.id, newEdgeCounter++);
+    }
+  });
+
+  // Mark newly processed items into the ref
+  useEffect(() => {
+    nodes.forEach((n) => animatedNodeIdsRef.current.add(n.id));
+    edges.forEach((e) => animatedEdgeIdsRef.current.add(e.id));
+  }, [nodes, edges]);
+
   return (
     <div
       ref={containerRef}
@@ -190,6 +439,31 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
             }
             .contradiction-edge {
               animation: contradiction-pulse 3.5s ease-in-out infinite;
+            }
+            @keyframes aegis-node-appear {
+              0% {
+                opacity: 0;
+                transform: scale(0.85);
+              }
+              100% {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+            .aegis-node-enter {
+              animation: aegis-node-appear 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+              transform-origin: center center;
+            }
+            @keyframes aegis-edge-draw-line {
+              from {
+                stroke-dashoffset: var(--edge-len);
+              }
+              to {
+                stroke-dashoffset: 0;
+              }
+            }
+            .aegis-edge-entering {
+              animation: aegis-edge-draw-line 500ms ease-out both;
             }
           `}</style>
         </defs>
@@ -233,6 +507,12 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
             edgeClass = '';
           }
 
+          // Edge draw animation calculation for newly added edge
+          const isNewEdge = newEdgesStaggerMap.has(edge.id);
+          const edgeLength = Math.round(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))) || 200;
+          const staggerIdx = newEdgesStaggerMap.get(edge.id) ?? 0;
+          const animDelayMs = staggerIdx * 180 + 80;
+
           return (
             <g key={edge.id} className="transition-opacity duration-300">
               <line
@@ -242,8 +522,20 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
                 y2={y2}
                 stroke={strokeColor}
                 strokeWidth={strokeWidth}
-                strokeDasharray={strokeDasharray}
-                className={edgeClass}
+                strokeDasharray={isNewEdge ? edgeLength : strokeDasharray}
+                strokeDashoffset={isNewEdge ? edgeLength : undefined}
+                style={{
+                  transition: draggingNodeId
+                    ? 'none'
+                    : 'x1 350ms cubic-bezier(0.16, 1, 0.3, 1), y1 350ms cubic-bezier(0.16, 1, 0.3, 1), x2 350ms cubic-bezier(0.16, 1, 0.3, 1), y2 350ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  ...(isNewEdge
+                    ? ({
+                        ['--edge-len' as any]: `${edgeLength}px`,
+                        animationDelay: `${animDelayMs}ms`,
+                      } as React.CSSProperties)
+                    : {}),
+                }}
+                className={`${edgeClass} ${isNewEdge ? 'aegis-edge-entering' : ''}`}
               />
             </g>
           );
@@ -263,6 +555,11 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
           const isPrimeSuspect = node.semantic === 'prime_suspect';
           const isDimmed = isSolved && !isPrimeSuspect;
 
+          const isNewNode = newNodesStaggerMap.has(node.id);
+          const staggerIdx = newNodesStaggerMap.get(node.id) ?? 0;
+          const animDelayMs = staggerIdx * 180;
+          const isBeingDragged = draggingNodeId === node.id;
+
           return (
             <div
               key={node.id}
@@ -272,13 +569,19 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
                 top: `${node.y}px`,
                 width: `${NODE_WIDTH}px`,
                 height: `${NODE_HEIGHT}px`,
+                animationDelay: isNewNode ? `${animDelayMs}ms` : undefined,
+                transition: isBeingDragged
+                  ? 'box-shadow 200ms ease, opacity 200ms ease'
+                  : 'left 350ms cubic-bezier(0.16, 1, 0.3, 1), top 350ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease, opacity 200ms ease',
               }}
               onMouseDown={(e) => handleNodeMouseDown(e, node)}
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectNode(node);
               }}
-              className={`absolute pointer-events-auto rounded-[7px] border p-2.5 flex flex-col justify-between transition-shadow duration-200 cursor-pointer ${getNodeSemanticClasses(
+              className={`absolute pointer-events-auto rounded-[7px] border p-2.5 flex flex-col justify-between cursor-pointer ${
+                isNewNode ? 'aegis-node-enter' : ''
+              } ${getNodeSemanticClasses(
                 node.semantic,
                 isDimmed
               )} ${isSelected ? 'ring-2 ring-[#6B9B85]' : ''}`}
@@ -288,10 +591,11 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
                 <span className={`uppercase tracking-wider font-semibold ${getNodeBadgeColor(node.semantic)}`}>
                   {node.category}
                 </span>
-                {node.confidence && (
-                  <span className={isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'}>
-                    {node.confidence}%
-                  </span>
+                {node.confidence !== undefined && (
+                  <AnimatedConfidence
+                    value={node.confidence}
+                    className={isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'}
+                  />
                 )}
               </div>
 

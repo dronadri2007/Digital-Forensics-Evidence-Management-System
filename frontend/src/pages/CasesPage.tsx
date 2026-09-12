@@ -224,8 +224,8 @@ export const CasesPage: React.FC<CasesPageProps> = ({
                               ? 'bg-[#6B9B85]/10 text-[#74AC95] border-[#6B9B85]/25'
                               : 'bg-[#1E6147]/10 text-[#1E6147] border-[#1E6147]/25'
                             : isDark
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
-                              : 'bg-emerald-700/10 text-emerald-800 border-emerald-700/25'
+                              ? 'bg-[#E4BCC9]/10 text-[#E8C8D4] border-[#E4BCC9]/25'
+                              : 'bg-[#E4BCC9]/25 text-[#7A4455] border-[#E4BCC9]/50'
                         }`}
                       >
                         {caseItem.status}
