@@ -273,7 +273,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-0.5 space-y-3.5">
-          {/* Field 1: INCIDENT MODE + Dice Button */}
+          {/* Field 1: INCIDENT MODE + Top Dice Button */}
           <div>
             <label
               htmlFor="incident-mode"
@@ -305,7 +305,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                 />
               </div>
 
-              {/* Dice Roll Button: ~36x36px */}
+              {/* Top Dice Roll Button: ~36x36px */}
               <button
                 type="button"
                 onClick={handleDiceRoll}
@@ -327,7 +327,7 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
             </div>
           </div>
 
-          {/* Fields 2-6 Group: Legible Muted State in Random Mode */}
+          {/* Fields 2-6 Group: Legible Muted State in Random Mode with Standard Chevrons */}
           <div className="space-y-3.5">
             {/* Field 2: MOTIVE ARCHETYPE */}
             <div>
@@ -358,21 +358,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   ))}
                 </select>
 
-                {isRandom ? (
-                  <Dices
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
-                      rollingFields.motive
-                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
-                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                ) : (
-                  <ChevronDown
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                )}
+                <ChevronDown
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${
+                    isRandom
+                      ? isDark ? 'text-[#EDEAE3]/30' : 'text-[#1A1C1E]/30'
+                      : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                  }`}
+                />
               </div>
             </div>
 
@@ -405,21 +397,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   ))}
                 </select>
 
-                {isRandom ? (
-                  <Dices
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
-                      rollingFields.scarcity
-                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
-                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                ) : (
-                  <ChevronDown
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                )}
+                <ChevronDown
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${
+                    isRandom
+                      ? isDark ? 'text-[#EDEAE3]/30' : 'text-[#1A1C1E]/30'
+                      : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                  }`}
+                />
               </div>
             </div>
 
@@ -452,21 +436,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   ))}
                 </select>
 
-                {isRandom ? (
-                  <Dices
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
-                      rollingFields.scene
-                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
-                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                ) : (
-                  <ChevronDown
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                )}
+                <ChevronDown
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${
+                    isRandom
+                      ? isDark ? 'text-[#EDEAE3]/30' : 'text-[#1A1C1E]/30'
+                      : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                  }`}
+                />
               </div>
             </div>
 
@@ -499,21 +475,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   ))}
                 </select>
 
-                {isRandom ? (
-                  <Dices
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
-                      rollingFields.relationship
-                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
-                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                ) : (
-                  <ChevronDown
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                )}
+                <ChevronDown
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${
+                    isRandom
+                      ? isDark ? 'text-[#EDEAE3]/30' : 'text-[#1A1C1E]/30'
+                      : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                  }`}
+                />
               </div>
             </div>
 
@@ -546,21 +514,13 @@ export const WildcardConfigModal: React.FC<WildcardConfigModalProps> = ({
                   ))}
                 </select>
 
-                {isRandom ? (
-                  <Dices
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none transition-all duration-200 ${
-                      rollingFields.complexity
-                        ? isDark ? 'text-[#74AC95]' : 'text-[#1E6147]'
-                        : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                ) : (
-                  <ChevronDown
-                    className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-opacity ${
-                      isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
-                    }`}
-                  />
-                )}
+                <ChevronDown
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${
+                    isRandom
+                      ? isDark ? 'text-[#EDEAE3]/30' : 'text-[#1A1C1E]/30'
+                      : isDark ? 'text-[#EDEAE3]/40' : 'text-[#1A1C1E]/40'
+                  }`}
+                />
               </div>
             </div>
           </div>
