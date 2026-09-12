@@ -213,35 +213,17 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
                 </div>
               </div>
 
-              {/* Right: Inline CONFIGURE action + restrained selection marker */}
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedId(WILDCARD_SCENARIO.id);
-                    setIsConfigModalOpen(true);
-                  }}
-                  className={`px-3.5 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider font-semibold border transition-all duration-150 cursor-pointer ${
-                    isDark
-                      ? 'border-white/[0.12] bg-white/[0.04] text-[#EDEAE3]/80 hover:border-[#74AC95]/50 hover:text-[#74AC95]'
-                      : 'border-black/[0.12] bg-black/[0.04] text-[#1A1C1E]/80 hover:border-[#1E6147]/50 hover:text-[#1E6147]'
+              {/* Right: Restrained selection marker */}
+              <div
+                className={`w-4 h-4 rounded-full flex items-center justify-center transition-opacity duration-150 shrink-0 ${
+                  isWildcardSelected ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isDark ? 'bg-[#74AC95]' : 'bg-[#1E6147]'
                   }`}
-                >
-                  CONFIGURE →
-                </button>
-
-                <div
-                  className={`w-4 h-4 rounded-full flex items-center justify-center transition-opacity duration-150 ${
-                    isWildcardSelected ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isDark ? 'bg-[#74AC95]' : 'bg-[#1E6147]'
-                    }`}
-                  />
-                </div>
+                />
               </div>
             </div>
           </div>
