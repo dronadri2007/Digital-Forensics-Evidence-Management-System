@@ -461,25 +461,25 @@ export const AegisAiPanel: React.FC<AegisAiPanelProps> = ({
 
           </div>
 
-          {/* Bottom Input Area with soft fade transition (no hard divider) */}
-          <div className="px-3 sm:px-3.5 pb-3 sm:pb-3.5 pt-1 shrink-0 relative">
-            {/* Fade gradient (Option B: 48px tall, softly blending the feed content into composer zone) */}
+          {/* Bottom Input Area: Floating card zone with soft fade transition above */}
+          <div className="px-4 pb-4 pt-1 shrink-0 relative">
+            {/* Fade gradient: 52px tall, softly dissolving the feed content into composer card zone */}
             <div
-              className="pointer-events-none absolute left-0 right-0 h-12 -top-12 z-10"
+              className="pointer-events-none absolute left-0 right-0 h-[52px] -top-[52px] z-10"
               style={{
                 background: isDark
-                  ? 'linear-gradient(to top, rgba(14, 18, 22, 0.95), transparent)'
-                  : 'linear-gradient(to top, rgba(250, 248, 243, 0.95), transparent)',
+                  ? 'linear-gradient(to top, rgba(16, 21, 26, 0.95) 0%, rgba(16, 21, 26, 0.5) 45%, transparent 100%)'
+                  : 'linear-gradient(to top, rgba(246, 242, 248, 0.95) 0%, rgba(246, 242, 248, 0.5) 45%, transparent 100%)',
               }}
               aria-hidden="true"
             />
 
             <form
               onSubmit={handleSendPrompt}
-              className={`relative w-full rounded-[14px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] ${
+              className={`relative w-full rounded-[10px] border flex flex-col justify-between transition-all duration-150 ease-out focus-within:ring-1 focus-within:ring-[#6B9B85] backdrop-blur-md ${
                 isDark
-                  ? 'bg-black/30 border-white/[0.08]'
-                  : 'bg-white border-black/[0.08] shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]'
+                  ? 'bg-white/[0.055] border-white/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.35)]'
+                  : 'bg-[#FCFAF7]/95 border-black/[0.04] shadow-[0_8px_24px_rgba(60,40,80,0.06)]'
               }`}
             >
               {/* Growing Multi-line Textarea */}
