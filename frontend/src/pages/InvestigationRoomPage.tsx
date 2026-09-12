@@ -4,6 +4,7 @@ import {
   MOCK_INVESTIGATION_CASE,
   GraphNodeData,
   CaseInvestigationData,
+  MockEvidencePickerItem,
 } from '../data/mockInvestigationData';
 import { CaseContextStrip } from '../components/investigation/CaseContextStrip';
 import { EvidenceGraph } from '../components/investigation/EvidenceGraph';
@@ -76,7 +77,7 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
   }
 
   // Case investigation state
-  const [caseData] = useState<CaseInvestigationData>(() => ({
+  const [caseData, setCaseData] = useState<CaseInvestigationData>(() => ({
     ...MOCK_INVESTIGATION_CASE,
     caseId: resolvedCase.id,
     title: resolvedCase.title,
@@ -94,6 +95,21 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
     if (!isSolved) {
       setIsAiCollapsed(false);
     }
+  };
+
+  // Handle adding mock evidence item
+  const handleAddEvidence = (item: MockEvidencePickerItem) => {
+    setCaseData((prev) => {
+      if (prev.nodes.some((n) => n.id === item.node.id)) {
+        return prev;
+      }
+      return {
+        ...prev,
+        evidenceCount: prev.evidenceCount + 1,
+        nodes: [...prev.nodes, item.node],
+        edges: [...prev.edges, item.edge],
+      };
+    });
   };
 
   return (
@@ -141,6 +157,7 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
           isSolved={isSolved}
           onToggleCollapse={() => setIsAiCollapsed((prev) => !prev)}
           onReturnToActive={() => setIsSolved(false)}
+          onAddEvidence={handleAddEvidence}
         />
 
       </div>

@@ -475,3 +475,238 @@ export const MOCK_INVESTIGATION_CASE: CaseInvestigationData = {
     ]
   }
 };
+
+export interface MockEvidencePickerItem {
+  id: string;
+  name: string;
+  meta: string;
+  typeLabel: 'Video' | 'Image' | 'Doc' | 'Data';
+  iconType: 'video' | 'image' | 'doc' | 'data' | 'vehicle';
+  node: GraphNodeData;
+  edge: GraphEdgeData;
+}
+
+export const MOCK_EVIDENCE_PICKER_ITEMS: MockEvidencePickerItem[] = [
+  {
+    id: 'ev-cctv-04',
+    name: 'CCTV-04-23h14.mp4',
+    meta: 'Video · 24.8 MB',
+    typeLabel: 'Video',
+    iconType: 'video',
+    node: {
+      id: 'cctv_04_gate',
+      name: 'CCTV-04 Pier Gate',
+      category: 'Camera',
+      semantic: 'neutral',
+      confidence: 91,
+      roleSubtitle: 'Perimeter Video Clip',
+      x: 430,
+      y: 480,
+      inspector: {
+        entityType: 'CAMERA // SENSOR CLIP',
+        nameId: 'CCTV-04-23h14.mp4 (Gate Cam)',
+        confidence: '91%',
+        knownRelationships: ['Pier 14 Terminal (Perimeter Gate)', 'Audi RS6 (49-X-204)'],
+        evidence: [
+          'Optical trigger recorded vehicle heading south towards terminal dock',
+          'Driver silhouette matches height profile 178cm'
+        ],
+        timeline: [
+          { timestamp: '23:14:02', event: 'Optical motion trigger registered at gate' }
+        ]
+      }
+    },
+    edge: {
+      id: 'e_ev_cctv_04',
+      source: 'cctv_04_gate',
+      target: 'pier_14',
+      semantic: 'forensic',
+      label: 'Perimeter Optical Gate Capture'
+    }
+  },
+  {
+    id: 'ev-latent-print',
+    name: 'Latent print scan 12A.jpg',
+    meta: 'Image · 3.1 MB',
+    typeLabel: 'Image',
+    iconType: 'image',
+    node: {
+      id: 'latent_print_12a',
+      name: 'Latent Print 12A',
+      category: 'Evidence',
+      semantic: 'neutral',
+      confidence: 86,
+      roleSubtitle: 'Physical Forensic Lift',
+      x: 540,
+      y: 70,
+      inspector: {
+        entityType: 'EVIDENCE // BIOMETRIC LIFT',
+        nameId: 'Latent Print Scan 12A (Terminal 04 Console)',
+        confidence: '86%',
+        knownRelationships: ['Elena Rostova (92% Minutiae Match)', 'Pier 14 Terminal (Substrate)'],
+        evidence: [
+          '12-point ridge bifurcation match to suspect right thumb',
+          'Cyanoacrylate fuming recovery verified on mechanical override switch'
+        ],
+        timeline: [
+          { timestamp: '02:22:30', event: 'Contact deposit estimated during override execution' }
+        ]
+      }
+    },
+    edge: {
+      id: 'e_ev_latent_12a',
+      source: 'latent_print_12a',
+      target: 'elena_rostova',
+      semantic: 'forensic',
+      label: 'Biometric Ridge Match'
+    }
+  },
+  {
+    id: 'ev-bank-stmt',
+    name: 'Bank statement Q3.pdf',
+    meta: 'Doc · 340 KB',
+    typeLabel: 'Doc',
+    iconType: 'doc',
+    node: {
+      id: 'bank_stmt_q3',
+      name: 'Bank Statement Q3',
+      category: 'Evidence',
+      semantic: 'neutral',
+      confidence: 94,
+      roleSubtitle: 'Offshore Wire Ledger',
+      x: 920,
+      y: 120,
+      inspector: {
+        entityType: 'EVIDENCE // FINANCIAL DOCUMENT',
+        nameId: 'Bank Statement Q3 (Cygnus Offshore Escrow)',
+        confidence: '94%',
+        knownRelationships: ['Tariq Mercer (Beneficiary Account)', 'Marcus Vance (Debtor Account)'],
+        evidence: [
+          'Transfer reference TX-99201 settled 48 hours prior to intrusion',
+          '$180,000 disbursement under shell consulting invoice'
+        ],
+        timeline: [
+          { timestamp: '23:40:00', event: 'Ledger settlement confirmed via correspondent banking' }
+        ]
+      }
+    },
+    edge: {
+      id: 'e_ev_bank_q3',
+      source: 'bank_stmt_q3',
+      target: 'tariq_mercer',
+      semantic: 'forensic',
+      label: 'Financial Wire Trace'
+    }
+  },
+  {
+    id: 'ev-tower-ping',
+    name: 'Tower 1 ping log.csv',
+    meta: 'Data · 88 KB',
+    typeLabel: 'Data',
+    iconType: 'data',
+    node: {
+      id: 'tower_1_ping',
+      name: 'Tower 1 Ping Log',
+      category: 'Device',
+      semantic: 'neutral',
+      confidence: 88,
+      roleSubtitle: 'Cellular Azimuth Burst',
+      x: 140,
+      y: 520,
+      inspector: {
+        entityType: 'DEVICE // TELECOM LOG',
+        nameId: 'Tower 1 Cellular Ping Telemetry Log',
+        confidence: '88%',
+        knownRelationships: ['Julian Cross (Associated IMSI Handset)'],
+        evidence: [
+          'Sector 4 antenna handoff recorded at 02:08:14',
+          'Signal strength -74dBm indicates line-of-sight to terminal'
+        ],
+        timeline: [
+          { timestamp: '02:08:14', event: 'Cellular handshake recorded during breach window' }
+        ]
+      }
+    },
+    edge: {
+      id: 'e_ev_tower_ping',
+      source: 'tower_1_ping',
+      target: 'julian_cross',
+      semantic: 'forensic',
+      label: 'Cellular Handoff Record'
+    }
+  },
+  {
+    id: 'ev-witness-stmt',
+    name: 'Witness statement 07.docx',
+    meta: 'Doc · 22 KB',
+    typeLabel: 'Doc',
+    iconType: 'doc',
+    node: {
+      id: 'witness_stmt_07',
+      name: 'Witness Stmt 07',
+      category: 'Evidence',
+      semantic: 'neutral',
+      confidence: 75,
+      roleSubtitle: 'Security Guard Debrief',
+      x: 140,
+      y: 60,
+      inspector: {
+        entityType: 'EVIDENCE // WITNESS RECORD',
+        nameId: 'Witness Statement #07 (Guard Station 2)',
+        confidence: '75%',
+        knownRelationships: ['Marcus Vance (Observed Vehicle)'],
+        evidence: [
+          'Guard logs confirm dark station wagon entering perimeter without badge scan at 01:42',
+          'Operator was unable to identify driver through tinted windshield'
+        ],
+        timeline: [
+          { timestamp: '01:42:10', event: 'Guard verbal observation noted in logbook' }
+        ]
+      }
+    },
+    edge: {
+      id: 'e_ev_witness_07',
+      source: 'witness_stmt_07',
+      target: 'marcus_vance',
+      semantic: 'forensic',
+      label: 'Corroborating Perimeter Observation'
+    }
+  },
+  {
+    id: 'ev-vehicle-reg',
+    name: 'Vehicle registration.pdf',
+    meta: 'Doc · 145 KB',
+    typeLabel: 'Doc',
+    iconType: 'vehicle',
+    node: {
+      id: 'vehicle_reg_doc',
+      name: 'Vehicle Reg 49-X-204',
+      category: 'Vehicle',
+      semantic: 'neutral',
+      confidence: 99,
+      roleSubtitle: 'DMV Certified Title',
+      x: 880,
+      y: 450,
+      inspector: {
+        entityType: 'VEHICLE // MUNICIPAL TITLE',
+        nameId: 'Ashwick DMV Title Records (49-X-204)',
+        confidence: '99%',
+        knownRelationships: ['Audi RS6 (49-X-204) (Registered Conveyance)', 'Elena Rostova (Sole Owner)'],
+        evidence: [
+          'Official DMV state registry copy matches engine VIN: WAUZZZF24PA0921',
+          'Registration current, no lienholder reported'
+        ],
+        timeline: [
+          { timestamp: '00:00:00', event: 'State DMV database record synchronized' }
+        ]
+      }
+    },
+    edge: {
+      id: 'e_ev_vehicle_reg',
+      source: 'vehicle_reg_doc',
+      target: 'audi_rs6',
+      semantic: 'forensic',
+      label: 'Certified DMV Title Registration'
+    }
+  }
+];
