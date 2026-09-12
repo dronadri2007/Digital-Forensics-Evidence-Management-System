@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Crosshair } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { SCENARIOS, WILDCARD_SCENARIO } from '../services/caseService';
+import { SCENARIOS, WILDCARD_SCENARIO, WildcardConfig } from '../services/caseService';
+import { WildcardConfigModal } from '../components/investigation/WildcardConfigModal';
 
 interface NewInvestigationPageProps {
-  onStartCase: (scenarioId: string) => void;
+  onStartCase: (scenarioId: string, wildcardConfig?: WildcardConfig) => void;
 }
 
 export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
@@ -14,6 +15,7 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
   const isDark = theme === 'dark';
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
@@ -21,7 +23,16 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
 
   const handleStart = () => {
     if (!selectedId) return;
+    if (selectedId === WILDCARD_SCENARIO.id) {
+      setIsConfigModalOpen(true);
+      return;
+    }
     onStartCase(selectedId);
+  };
+
+  const handleGenerateWildcard = (config: WildcardConfig) => {
+    setIsConfigModalOpen(false);
+    onStartCase(WILDCARD_SCENARIO.id, config);
   };
 
   const isWildcardSelected = selectedId === WILDCARD_SCENARIO.id;
@@ -202,23 +213,41 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
                 </div>
               </div>
 
-              {/* Small restrained selection marker */}
-              <div
-                className={`w-4 h-4 rounded-full flex items-center justify-center transition-opacity duration-150 shrink-0 ${
-                  isWildcardSelected ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isDark ? 'bg-[#74AC95]' : 'bg-[#1E6147]'
+              {/* Right: Inline CONFIGURE action + restrained selection marker */}
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedId(WILDCARD_SCENARIO.id);
+                    setIsConfigModalOpen(true);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider font-semibold border transition-all duration-150 cursor-pointer ${
+                    isDark
+                      ? 'border-white/[0.12] bg-white/[0.04] text-[#EDEAE3]/80 hover:border-[#74AC95]/50 hover:text-[#74AC95]'
+                      : 'border-black/[0.12] bg-black/[0.04] text-[#1A1C1E]/80 hover:border-[#1E6147]/50 hover:text-[#1E6147]'
                   }`}
-                />
+                >
+                  CONFIGURE →
+                </button>
+
+                <div
+                  className={`w-4 h-4 rounded-full flex items-center justify-center transition-opacity duration-150 ${
+                    isWildcardSelected ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isDark ? 'bg-[#74AC95]' : 'bg-[#1E6147]'
+                    }`}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* START INVESTIGATION ACTION */}
+        {/* START INVESTIGATION / CONFIGURE INCIDENT ACTION */}
         <div className="mt-10 sm:mt-12 flex items-center">
           {selectedId ? (
             <button
@@ -229,7 +258,7 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
                   : 'bg-[#B6C7D6] text-[#1A1C1E] hover:brightness-105 active:scale-[0.99]'
               }`}
             >
-              <span>START INVESTIGATION</span>
+              <span>{isWildcardSelected ? 'CONFIGURE INCIDENT' : 'START INVESTIGATION'}</span>
               <span className="font-sans text-sm">→</span>
             </button>
           ) : (
@@ -247,6 +276,13 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
             </button>
           )}
         </div>
+
+        {/* WILDCARD CONFIGURATION MODAL */}
+        <WildcardConfigModal
+          isOpen={isConfigModalOpen}
+          onClose={() => setIsConfigModalOpen(false)}
+          onGenerate={handleGenerateWildcard}
+        />
       </div>
     </div>
   );

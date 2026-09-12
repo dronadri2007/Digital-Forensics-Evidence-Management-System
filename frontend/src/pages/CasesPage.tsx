@@ -7,6 +7,14 @@ export interface CaseItem {
   title: string;
   description: string;
   status: 'INVESTIGATION ACTIVE' | 'INVESTIGATION COMPLETE';
+  wildcardConfig?: {
+    motive: string;
+    scene: string;
+    scarcity: string;
+    window: string;
+    evidenceCount?: number;
+    confidence?: number;
+  };
 }
 
 interface CasesPageProps {

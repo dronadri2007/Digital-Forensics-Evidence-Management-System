@@ -80,6 +80,8 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
     ...MOCK_INVESTIGATION_CASE,
     caseId: resolvedCase.id,
     title: resolvedCase.title,
+    evidenceCount: resolvedCase.wildcardConfig?.evidenceCount ?? MOCK_INVESTIGATION_CASE.evidenceCount,
+    confidence: resolvedCase.wildcardConfig?.confidence ?? MOCK_INVESTIGATION_CASE.confidence,
   }));
   const [selectedNode, setSelectedNode] = useState<GraphNodeData | null>(null);
   const [isAiCollapsed, setIsAiCollapsed] = useState<boolean>(false);

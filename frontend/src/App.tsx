@@ -7,7 +7,7 @@ import { InvestigationRoomPage } from './pages/InvestigationRoomPage';
 import { NewInvestigationPage } from './pages/NewInvestigationPage';
 import { AboutPage } from './pages/AboutPage';
 import { InfoModal } from './components/InfoModal';
-import { loadStoredCases, saveStoredCases, generateMockCase } from './services/caseService';
+import { loadStoredCases, saveStoredCases, generateMockCase, WildcardConfig } from './services/caseService';
 
 const AppContent: React.FC = () => {
   const { theme } = useTheme();
@@ -42,8 +42,8 @@ const AppContent: React.FC = () => {
     setCurrentPath(path);
   };
 
-  const handleStartCase = (scenarioId: string) => {
-    const newCase = generateMockCase(scenarioId, cases);
+  const handleStartCase = (scenarioId: string, wildcardConfig?: WildcardConfig) => {
+    const newCase = generateMockCase(scenarioId, cases, wildcardConfig);
     const updatedCases = [newCase, ...cases];
     setCases(updatedCases);
     saveStoredCases(updatedCases);
