@@ -338,6 +338,33 @@ export const NODE_VORTEX_HANDLE: GraphNodeData = {
   }
 };
 
+export const NODE_BANK_STMT_Q3: GraphNodeData = {
+  id: 'bank_stmt_q3',
+  name: 'Bank Statement Q3',
+  category: 'Evidence',
+  semantic: 'neutral',
+  confidence: 94,
+  roleSubtitle: 'Offshore Wire Ledger',
+  x: 920,
+  y: 120,
+  inspector: {
+    entityType: 'EVIDENCE // FINANCIAL DOCUMENT',
+    nameId: 'Bank Statement Q3 (Cygnus Offshore Escrow)',
+    confidence: '94%',
+    knownRelationships: [
+      'Elena Rostova (Beneficiary Account)',
+      'Marcus Vance (Debtor Account)',
+    ],
+    evidence: [
+      'Transfer reference TX-99201 settled 48 hours prior to intrusion',
+      '$180,000 disbursement under shell consulting invoice',
+    ],
+    timeline: [
+      { timestamp: '23:40:00', event: 'Ledger settlement confirmed via correspondent banking' },
+    ],
+  },
+};
+
 // ---------------------------------------------------------------------------
 // PROGRESSIVE DISCOVERY STAGES
 // ---------------------------------------------------------------------------
@@ -741,7 +768,7 @@ export const DISCOVERY_STAGES: DiscoveryStageData[] = [
     latestFinding: 'Conclusive alibi collision established. Optical gate timestamps contradict claimed alibi by 47 minutes.',
     nextLead: 'Case ready for formal resolution.',
     confidence: 92,
-    evidenceCount: 7,
+    evidenceCount: 8,
     nodes: [
       NODE_LIAM_WRIGHT,
       NODE_PIER_14,
@@ -753,6 +780,7 @@ export const DISCOVERY_STAGES: DiscoveryStageData[] = [
       NODE_AUDI_RS6,
       NODE_ELENA_ROSTOVA_PRIME,
       NODE_VORTEX_HANDLE,
+      NODE_BANK_STMT_Q3,
     ],
     edges: [
       {
@@ -831,6 +859,13 @@ export const DISCOVERY_STAGES: DiscoveryStageData[] = [
         target: 'cctv_p14',
         semantic: 'contradiction',
         label: 'Alibi Log vs Optical Gate Timestamp',
+      },
+      {
+        id: 'e_bank_elena',
+        source: 'bank_stmt_q3',
+        target: 'elena_rostova',
+        semantic: 'forensic',
+        label: 'Financial Wire Trace',
       },
     ],
     newLogs: [

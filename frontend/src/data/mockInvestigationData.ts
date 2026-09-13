@@ -580,7 +580,7 @@ export const MOCK_EVIDENCE_PICKER_ITEMS: MockEvidencePickerItem[] = [
         entityType: 'EVIDENCE // FINANCIAL DOCUMENT',
         nameId: 'Bank Statement Q3 (Cygnus Offshore Escrow)',
         confidence: '94%',
-        knownRelationships: ['Tariq Mercer (Beneficiary Account)', 'Marcus Vance (Debtor Account)'],
+        knownRelationships: ['Elena Rostova (Beneficiary Account)', 'Marcus Vance (Debtor Account)'],
         evidence: [
           'Transfer reference TX-99201 settled 48 hours prior to intrusion',
           '$180,000 disbursement under shell consulting invoice'
@@ -593,7 +593,7 @@ export const MOCK_EVIDENCE_PICKER_ITEMS: MockEvidencePickerItem[] = [
     edge: {
       id: 'e_ev_bank_q3',
       source: 'bank_stmt_q3',
-      target: 'tariq_mercer',
+      target: 'elena_rostova',
       semantic: 'forensic',
       label: 'Financial Wire Trace'
     }

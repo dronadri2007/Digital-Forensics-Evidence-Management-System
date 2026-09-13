@@ -378,8 +378,44 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
     }
   };
 
+  // Derive effective semantic according to confidence thresholds:
+  // - Grey (neutral): below ~40% confidence
+  // - Amber (suspect): roughly 40-70% confidence
+  // - Red (prime suspect): above ~70% confidence
+  const getEffectiveSemantic = (node: GraphNodeData): string => {
+    if (node.semantic === 'victim') return 'victim';
+
+    if (node.category === 'Person' || node.semantic === 'suspect' || node.semantic === 'prime_suspect') {
+      if (node.confidence !== undefined) {
+        if (node.confidence > 70) return 'prime_suspect';
+        if (node.confidence >= 40) return 'suspect';
+        return 'neutral';
+      }
+    }
+
+    return node.semantic;
+  };
+
   // Node Map for edge calculations
   const nodeMap = new Map<string, GraphNodeData>(nodes.map((n) => [n.id, n]));
+
+  // Development safety net: warn if any rendered node has zero connected edges
+  useEffect(() => {
+    if (Boolean((import.meta as any)?.env?.DEV)) {
+      const connected = new Set<string>();
+      edges.forEach((e) => {
+        connected.add(e.source);
+        connected.add(e.target);
+      });
+      nodes.forEach((n) => {
+        if (!connected.has(n.id)) {
+          console.warn(
+            `[EvidenceGraph] Orphan node detected: "${n.name}" (${n.id}) has no connected edges.`
+          );
+        }
+      });
+    }
+  }, [nodes, edges]);
 
   // Find newly added nodes and edges for staggered entrance animations
   let newNodeCounter = 0;
@@ -552,7 +588,8 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
       >
         {nodes.map((node) => {
           const isSelected = selectedNodeId === node.id;
-          const isPrimeSuspect = node.semantic === 'prime_suspect';
+          const effectiveSemantic = getEffectiveSemantic(node);
+          const isPrimeSuspect = effectiveSemantic === 'prime_suspect';
           const isDimmed = isSolved && !isPrimeSuspect;
 
           const isNewNode = newNodesStaggerMap.has(node.id);
@@ -582,13 +619,13 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
               className={`absolute pointer-events-auto rounded-[7px] border p-2.5 flex flex-col justify-between cursor-pointer ${
                 isNewNode ? 'aegis-node-enter' : ''
               } ${getNodeSemanticClasses(
-                node.semantic,
+                effectiveSemantic,
                 isDimmed
               )} ${isSelected ? 'ring-2 ring-[#6B9B85]' : ''}`}
             >
               {/* Card Top: Type label (tiny mono) + Confidence */}
               <div className="flex items-center justify-between text-[9px] font-mono leading-none">
-                <span className={`uppercase tracking-wider font-semibold ${getNodeBadgeColor(node.semantic)}`}>
+                <span className={`uppercase tracking-wider font-semibold ${getNodeBadgeColor(effectiveSemantic)}`}>
                   {node.category}
                 </span>
                 {node.confidence !== undefined && (

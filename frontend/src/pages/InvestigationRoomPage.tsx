@@ -244,11 +244,23 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
       if (prev.nodes.some((n) => n.id === item.node.id)) {
         return prev;
       }
+      let edgeToAdd = item.edge;
+      if (edgeToAdd) {
+        const targetExists = prev.nodes.some((n) => n.id === edgeToAdd.target);
+        if (!targetExists) {
+          const fallbackTarget = prev.nodes.some((n) => n.id === 'pier_14')
+            ? 'pier_14'
+            : prev.nodes[0]?.id;
+          if (fallbackTarget) {
+            edgeToAdd = { ...edgeToAdd, target: fallbackTarget };
+          }
+        }
+      }
       return {
         ...prev,
         evidenceCount: prev.evidenceCount + 1,
         nodes: [...prev.nodes, item.node],
-        edges: [...prev.edges, item.edge],
+        edges: edgeToAdd ? [...prev.edges, edgeToAdd] : prev.edges,
       };
     });
   };
