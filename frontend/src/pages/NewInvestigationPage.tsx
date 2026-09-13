@@ -70,6 +70,7 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
             return (
               <div
                 key={scenario.id}
+                data-scenario-id={scenario.id}
                 onClick={() => handleSelect(scenario.id)}
                 role="button"
                 tabIndex={0}
@@ -85,8 +86,8 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
                       ? 'border-[#74AC95]/50 bg-[#10151D] shadow-[0_2px_8px_rgba(0,0,0,0.25)]'
                       : 'border-[#1E6147]/45 bg-[#FAF9F6] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
                     : isDark
-                    ? 'border-white/[0.08] bg-[#0D1117] hover:border-white/[0.16] hover:bg-[#11161E]'
-                    : 'border-black/[0.08] bg-white hover:border-black/[0.16] hover:bg-[#FAF8F5] shadow-[0_1px_4px_rgba(0,0,0,0.02)]'
+                    ? 'border-white/[0.08] bg-[#0D1117] hover:border-white/[0.18] hover:bg-[#11161E] hover:-translate-y-0.5'
+                    : 'border-black/[0.08] bg-white hover:border-black/[0.18] hover:bg-[#FAF8F5] hover:-translate-y-0.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]'
                 }`}
               >
                 <div>
@@ -178,8 +179,8 @@ export const NewInvestigationPage: React.FC<NewInvestigationPageProps> = ({
                   ? 'border-[#74AC95]/50 bg-[#10151D] shadow-[0_2px_8px_rgba(0,0,0,0.25)]'
                   : 'border-[#1E6147]/45 bg-[#FAF9F6] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
                 : isDark
-                ? 'border-white/[0.08] bg-[#0D1117] hover:border-white/[0.16] hover:bg-[#11161E]'
-                : 'border-black/[0.08] bg-white hover:border-black/[0.16] hover:bg-[#FAF8F5] shadow-[0_1px_4px_rgba(0,0,0,0.02)]'
+                ? 'border-white/[0.08] bg-[#0D1117] hover:border-white/[0.18] hover:bg-[#11161E] hover:-translate-y-0.5'
+                : 'border-black/[0.08] bg-white hover:border-black/[0.18] hover:bg-[#FAF8F5] hover:-translate-y-0.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]'
             }`}
           >
             <div className="flex items-start justify-between gap-4">

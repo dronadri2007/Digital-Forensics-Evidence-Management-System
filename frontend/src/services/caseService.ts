@@ -97,6 +97,33 @@ export const updateCaseStatus = (
   return updated;
 };
 
+/**
+ * Archive or restore a specific case in localStorage and return the updated cases list.
+ */
+export const archiveCase = (caseId: string, isArchived: boolean = true): CaseItem[] => {
+  const current = loadStoredCases();
+  const updated = current.map((c) => (c.id === caseId ? { ...c, isArchived } : c));
+  saveStoredCases(updated);
+  return updated;
+};
+
+/**
+ * Permanently delete a specific case and clean up its discovery state from localStorage.
+ */
+export const deleteCase = (caseId: string): CaseItem[] => {
+  const current = loadStoredCases();
+  const updated = current.filter((c) => c.id !== caseId);
+  saveStoredCases(updated);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem(`aegis_case_discovery_v1_${caseId}`);
+    } catch (e) {
+      console.warn('Failed to remove case discovery state', e);
+    }
+  }
+  return updated;
+};
+
 export type MotiveArchetype =
   | 'Financial Dispute'
   | 'Domestic / Jealousy'

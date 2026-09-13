@@ -25,6 +25,8 @@ import { loadStoredCases, updateCaseStatus } from '../services/caseService';
 interface InvestigationRoomPageProps {
   caseId?: string;
   cases?: CaseItem[];
+  isLoading?: boolean;
+  error?: string | null;
   onNavigateBack?: () => void;
   onUpdateCaseStatus?: (caseId: string, status: 'INVESTIGATION ACTIVE' | 'INVESTIGATION COMPLETE') => void;
 }
@@ -32,6 +34,8 @@ interface InvestigationRoomPageProps {
 export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
   caseId,
   cases: propCases,
+  isLoading = false,
+  error = null,
   onNavigateBack,
   onUpdateCaseStatus,
 }) => {
@@ -40,6 +44,83 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
 
   const activeCases = propCases ?? loadStoredCases();
   const resolvedCase = caseId ? activeCases.find((c) => c.id === caseId) : undefined;
+
+  // Loading skeleton state (Section B1)
+  if (isLoading) {
+    return (
+      <div
+        className={`relative w-full h-[100dvh] overflow-hidden flex flex-col transition-colors duration-300 ${
+          isDark ? 'bg-[#080A0C] text-[#EDEAE3]' : 'bg-[#F6F4EE] text-[#1A1C1E]'
+        }`}
+      >
+        <CaseContextStrip
+          caseId={caseId || 'CASE-···'}
+          title="Loading investigation..."
+          status="INVESTIGATION ACTIVE"
+          isSolved={false}
+          evidenceCount={0}
+          confidence={0}
+          onSolveToggle={() => {}}
+          onCloseCase={() => {}}
+          onReturnToActive={() => {}}
+          onReopenCase={() => {}}
+          onNavigateBack={onNavigateBack}
+        />
+        <div className="relative flex-1 w-full h-full flex flex-col items-center justify-center select-none">
+          <div className="w-6 h-6 border-2 border-[#6B9B85] border-t-transparent rounded-full animate-spin mb-3" />
+          <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#6B9B85]">
+            LOADING CASE...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Explicit error state (Section B2)
+  if (error) {
+    return (
+      <div
+        className={`relative w-full h-[100dvh] overflow-hidden flex flex-col items-center justify-center px-6 transition-colors duration-300 ${
+          isDark ? 'bg-[#080A0C] text-[#EDEAE3]' : 'bg-[#F6F4EE] text-[#1A1C1E]'
+        }`}
+      >
+        <div className="w-full max-w-md text-center">
+          <span
+            className={`font-mono text-xs uppercase tracking-[0.22em] block mb-3 select-none ${
+              isDark ? 'text-red-400' : 'text-red-600'
+            }`}
+          >
+            ERROR · CASE LOAD FAILURE
+          </span>
+          <h2
+            className={`font-sans text-xl sm:text-2xl font-bold tracking-tight mb-3 ${
+              isDark ? 'text-[#EDEAE3]' : 'text-[#1A1C1E]'
+            }`}
+          >
+            Failed to load case
+          </h2>
+          <p
+            className={`font-sans text-xs sm:text-sm leading-relaxed mb-8 ${
+              isDark ? 'text-[#EDEAE3]/55' : 'text-[#1A1C1E]/55'
+            }`}
+          >
+            {error}
+          </p>
+          <button
+            onClick={onNavigateBack}
+            className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border font-mono text-xs uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+              isDark
+                ? 'border-white/[0.12] bg-[#0D1117] text-[#EDEAE3] hover:border-[#74AC95]/50 hover:text-[#74AC95] hover:bg-[#11161E]'
+                : 'border-black/[0.12] bg-white text-[#1A1C1E] hover:border-[#1E6147]/50 hover:text-[#1E6147] hover:bg-[#FAF8F5]'
+            }`}
+          >
+            <span>←</span>
+            <span>Return to Case Files</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Handle gracefully when navigating to /cases/:id with no case data
   if (!resolvedCase) {
@@ -153,6 +234,17 @@ export const InvestigationRoomPage: React.FC<InvestigationRoomPageProps> = ({
   );
   const [selectedNode, setSelectedNode] = useState<GraphNodeData | null>(null);
   const [isAiCollapsed, setIsAiCollapsed] = useState<boolean>(false);
+
+  // Section G: Keyboard shortcut - Esc to dismiss Entity Inspector
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedNode(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Track status from resolvedCase, defaulting to 'INVESTIGATION ACTIVE'
   const [caseStatus, setCaseStatus] = useState<'INVESTIGATION ACTIVE' | 'INVESTIGATION COMPLETE'>(

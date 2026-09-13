@@ -6,8 +6,16 @@ import { CasesPage, CaseItem } from './pages/CasesPage';
 import { InvestigationRoomPage } from './pages/InvestigationRoomPage';
 import { NewInvestigationPage } from './pages/NewInvestigationPage';
 import { AboutPage } from './pages/AboutPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { InfoModal } from './components/InfoModal';
-import { loadStoredCases, saveStoredCases, generateMockCase, WildcardConfig } from './services/caseService';
+import {
+  loadStoredCases,
+  saveStoredCases,
+  generateMockCase,
+  archiveCase,
+  deleteCase,
+  WildcardConfig,
+} from './services/caseService';
 
 const AppContent: React.FC = () => {
   const { theme } = useTheme();
@@ -21,7 +29,7 @@ const AppContent: React.FC = () => {
     return '/';
   });
 
-  // Track previous path for /about Back button (defaults to /cases, not landing)
+  // Track previous path for /about and 404 Back button (defaults to /cases)
   const [previousPath, setPreviousPath] = useState<string>('/cases');
 
   const [cases, setCases] = useState<CaseItem[]>(() => loadStoredCases());
@@ -33,6 +41,19 @@ const AppContent: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // Global escape key listener to dismiss info modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isInfoOpen) {
+          setIsInfoOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isInfoOpen]);
 
   const navigate = (path: string) => {
     if (currentPath !== '/about' && path === '/about') {
@@ -63,27 +84,39 @@ const AppContent: React.FC = () => {
     });
   };
 
+  const handleArchiveCase = (caseId: string, isArchived: boolean) => {
+    const updated = archiveCase(caseId, isArchived);
+    setCases(updated);
+  };
+
+  const handleDeleteCase = (caseId: string) => {
+    const updated = deleteCase(caseId);
+    setCases(updated);
+  };
+
+  const isLanding = currentPath === '/';
   const isAbout = currentPath === '/about';
   const isCasesList = currentPath === '/cases';
   const isNewInvestigation = currentPath === '/cases/new';
   const caseMatch = currentPath.match(/^\/cases\/([^/]+)$/);
   const isInvestigation = Boolean(caseMatch) && !isNewInvestigation;
   const currentCaseId = isInvestigation && caseMatch ? caseMatch[1] : undefined;
-  const isInternal = isCasesList || isNewInvestigation || isInvestigation || isAbout;
+  const isNotFound = !isLanding && !isAbout && !isCasesList && !isNewInvestigation && !isInvestigation;
+  const isInternal = isCasesList || isNewInvestigation || isInvestigation || isAbout || isNotFound;
 
   return (
     <div 
       className={`relative w-full h-[100dvh] ${
-        isCasesList || isNewInvestigation || isAbout ? 'overflow-y-auto' : 'overflow-hidden'
+        isCasesList || isNewInvestigation || isAbout || isNotFound ? 'overflow-y-auto' : 'overflow-hidden'
       } transition-colors duration-300 ${
         isDark ? 'bg-[#080A0C] text-[#EDEAE3]' : 'bg-[#F6F4EE] text-[#1A1C1E]'
       } selection:bg-slate-700 selection:text-white`}
     >
-      {/* Fixed Top Navbar (Internal config for /cases, /cases/new, /about, and /cases/:id; landing config for /) */}
+      {/* Fixed Top Navbar (Internal config for /cases, /cases/new, /about, /cases/:id, and 404; landing config for /) */}
       <Navbar
         isInternalPage={isInternal}
         onBack={() => {
-          if (isAbout) {
+          if (isAbout || isNotFound) {
             navigate(previousPath || '/cases');
           } else if (isInvestigation || isNewInvestigation) {
             navigate('/cases');
@@ -114,9 +147,13 @@ const AppContent: React.FC = () => {
             cases={cases}
             onNewInvestigation={() => navigate('/cases/new')}
             onOpenCase={(id) => navigate(`/cases/${id}`)}
+            onArchiveCase={handleArchiveCase}
+            onDeleteCase={handleDeleteCase}
           />
-        ) : (
+        ) : isLanding ? (
           <LandingPage />
+        ) : (
+          <NotFoundPage onNavigate={navigate} />
         )}
       </main>
 

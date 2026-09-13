@@ -97,8 +97,8 @@ export const SuggestedNextSteps: React.FC<SuggestedNextStepsProps> = ({
                       ? 'border-white/[0.04] bg-white/[0.01] text-[#EDEAE3]/40'
                       : 'border-black/[0.04] bg-black/[0.01] text-[#1A1C1E]/40')
                   : isDark
-                  ? 'border-white/[0.09] bg-white/[0.03] text-[#EDEAE3]/80 hover:bg-white/[0.08] hover:border-white/[0.20] hover:text-[#EDEAE3] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                  : 'border-black/[0.08] bg-black/[0.02] text-[#1A1C1E]/80 hover:bg-black/[0.06] hover:border-black/[0.18] hover:text-[#1A1C1E] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                  ? 'border-white/[0.09] bg-white/[0.03] text-[#EDEAE3]/80 hover:bg-white/[0.08] hover:text-[#EDEAE3] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                  : 'border-black/[0.08] bg-black/[0.02] text-[#1A1C1E]/80 hover:bg-black/[0.06] hover:text-[#1A1C1E] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
               }`}
               title={chip.label}
             >

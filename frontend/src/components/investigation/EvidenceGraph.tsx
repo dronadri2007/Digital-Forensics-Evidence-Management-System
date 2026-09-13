@@ -348,16 +348,16 @@ export const EvidenceGraph: React.FC<EvidenceGraphProps> = ({
     switch (semantic) {
       case 'prime_suspect':
         return isDark
-          ? 'bg-[#181113] border-[#C85A5A]/50 text-[#EDEAE3] ring-1 ring-[#C85A5A]/30'
-          : 'bg-[#FDF4F4] border-[#B84A4A]/50 text-[#1A1C1E] ring-1 ring-[#B84A4A]/25';
+          ? 'bg-[#181113] border-[#C85A5A]/50 text-[#EDEAE3] ring-1 ring-[#C85A5A]/30 hover:border-[#C85A5A]/80'
+          : 'bg-[#FDF4F4] border-[#B84A4A]/50 text-[#1A1C1E] ring-1 ring-[#B84A4A]/25 hover:border-[#B84A4A]/80';
       case 'suspect':
         return isDark
-          ? 'bg-[#16130E] border-[#C8955A]/45 text-[#EDEAE3]'
-          : 'bg-[#FDF8F0] border-[#B8860B]/40 text-[#1A1C1E]';
+          ? 'bg-[#16130E] border-[#C8955A]/45 text-[#EDEAE3] hover:border-[#C8955A]/75'
+          : 'bg-[#FDF8F0] border-[#B8860B]/40 text-[#1A1C1E] hover:border-[#B8860B]/70';
       case 'victim':
         return isDark
-          ? 'bg-[#121417] border-[#8E9296]/40 text-[#EDEAE3]'
-          : 'bg-[#F5F6F8] border-[#71767D]/35 text-[#1A1C1E]';
+          ? 'bg-[#121417] border-[#8E9296]/40 text-[#EDEAE3] hover:border-[#8E9296]/70'
+          : 'bg-[#F5F6F8] border-[#71767D]/35 text-[#1A1C1E] hover:border-[#71767D]/65';
       default:
         return isDark
           ? 'bg-[#0E1216] border-white/[0.08] text-[#EDEAE3] hover:border-white/[0.18]'

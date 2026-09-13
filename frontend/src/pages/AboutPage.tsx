@@ -4,6 +4,7 @@ import { AshwickBottomStrip } from '../components/AshwickBottomStrip';
 
 interface AboutPageProps {
   onNavigate?: (path: string) => void;
+  isLoading?: boolean;
 }
 
 interface DraftingAnchorProps {
@@ -105,9 +106,24 @@ const DraftingAnchor: React.FC<DraftingAnchorProps> = ({
   );
 };
 
-export const AboutPage: React.FC<AboutPageProps> = () => {
+export const AboutPage: React.FC<AboutPageProps> = ({ isLoading = false }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  if (isLoading) {
+    return (
+      <div
+        className={`w-full min-h-[100dvh] flex flex-col items-center justify-center transition-colors duration-300 ${
+          isDark ? 'bg-[#080A0C] text-[#EDEAE3]' : 'bg-[#F6F4EE] text-[#1A1C1E]'
+        }`}
+      >
+        <div className="w-6 h-6 border-2 border-[#6B9B85] border-t-transparent rounded-full animate-spin mb-3" />
+        <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#6B9B85]">
+          LOADING DOCUMENTATION...
+        </span>
+      </div>
+    );
+  }
 
   const evidenceLayers = [
     { num: '01', name: 'CIVIL REGISTRY', desc: 'Municipal identity registrations, residency logs, and vital civil status records.' },
